@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <!-- Romantic gradient -->
+    <gradient
+        android:startColor="#FFFFFF"
+        android:endColor="#FFE6F0"
+        android:angle="45"
+        android:type="linear" />
+
+    <!-- Rounded corners -->
+    <corners
+        android:radius="25dp" />
+
+    <!-- Pink border -->
+    <stroke
+        android:width="2dp"
+        android:color="#FF4081" />
+
+    <!-- Inner padding -->
+    <padding
+        android:left="16dp"
+        android:top="16dp"
+        android:right="16dp"
+        android:bottom="16dp" />
+
+</shape>

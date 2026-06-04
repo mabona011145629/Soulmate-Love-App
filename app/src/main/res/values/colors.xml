@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Pink Colors -->
+    <color name="pink_light">#FFB6C1</color>
+    <color name="pink">#FF69B4</color>
+    <color name="pink_dark">#FF1493</color>
+    <color name="pink_deep">#DB7093</color>
+
+    <!-- Purple Colors -->
+    <color name="purple_light">#D8BFD8</color>
+    <color name="purple">#9370DB</color>
+    <color name="purple_dark">#8A2BE2</color>
+
+    <!-- Red Colors -->
+    <color name="red_light">#FF6347</color>
+    <color name="red">#FF4500</color>
+    <color name="red_dark">#DC143C</color>
+
+
+    <!-- White Colors -->
+    <color name="white">#FFFFFF</color>
+    <color name="white_smoke">#F5F5F5</color>
+    <color name="light_gray">#E0E0E0</color>
+    <color name="medium_gray">#9E9E9E</color>
+    <color name="dark_gray">#616161</color>
+    <color name="black">#000000</color>
+
+
+
+    <!-- Background Colors -->
+    <color name="background_light">#FFF0F5</color>
+    <color name="background_dark">#2C001E</color>
+    <color name="green">#4CAF50</color>
+
+    <color name="bottom_nav_tint">@color/pink_dark</color>
+</resources>

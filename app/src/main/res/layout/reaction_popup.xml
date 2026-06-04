@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="@drawable/dialog_backround"
+    android:padding="12dp"
+    android:elevation="8dp">
+
+    <ImageView
+        android:id="@+id/reactionLike"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_like"
+        android:padding="8dp"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <ImageView
+        android:id="@+id/reactionLove"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_love"
+        android:padding="8dp"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <ImageView
+        android:id="@+id/reactionHaha"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_haha"
+        android:padding="8dp"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <ImageView
+        android:id="@+id/reactionWow"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_wow"
+        android:padding="8dp"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <ImageView
+        android:id="@+id/reactionSad"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_sad"
+        android:padding="8dp"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <ImageView
+        android:id="@+id/reactionAngry"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_angry"
+        android:padding="8dp"
+        android:clickable="true"
+        android:focusable="true" />
+
+</LinearLayout>

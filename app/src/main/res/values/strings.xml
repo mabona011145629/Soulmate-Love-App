@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Soulmate</string>
+
+    <!-- APP DESCRIPTION FOR ADMOB/GOOGLE PLAY -->
+    <string name="app_description">
+        Soulmate - Find your perfect match in Swaziland!
+        A romantic dating app designed for Swazi singles looking for love,
+        friendship, or meaningful connections. Features smart matching,
+        real-time chat, profile verification, and location-based suggestions.
+        Join thousands of singles finding love in the Kingdom of Eswatini!
+    </string>
+
+    <!-- Other strings -->
+    <string name="title_activity_main">Soulmate Login</string>
+    <string name="title_activity_dashboard">Soulmate Dashboard</string>
+    <string name="title_activity_register">Create Account</string>
+</resources>

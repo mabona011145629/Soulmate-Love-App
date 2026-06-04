@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Gender Options for Registration -->
+    <string-array name="gender_options_full">
+        <item>Select Gender</item>
+        <item>Male</item>
+        <item>Female</item>
+        <item>Lesbian</item>
+        <item>Gay</item>
+        <item>Bisexual</item>
+        <item>Transgender</item>
+        <item>Other</item>
+    </string-array>
+
+    <!-- Qualification Types for Love Doctor -->
+    <string-array name="qualification_types">
+        <item>Psychologist</item>
+        <item>Motivator</item>
+        <item>Influencer</item>
+        <item>Pastor</item>
+        <item>Counsellor</item>
+        <item>Other</item>
+    </string-array>
+
+    <string-array name="qualification_type_values">
+        <item>psychologist</item>
+        <item>motivator</item>
+        <item>influencer</item>
+        <item>pastor</item>
+        <item>counsellor</item>
+        <item>other</item>
+    </string-array>
+
+    <!-- Age Ranges -->
+    <string-array name="age_ranges">
+        <item>18-25</item>
+        <item>26-35</item>
+        <item>36-45</item>
+        <item>46-55</item>
+        <item>56+</item>
+    </string-array>
+</resources>
