@@ -22,6 +22,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.view.Gravity;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -109,7 +110,7 @@ public class ProfileViewActivity extends AppCompatActivity {
         profileFullName = getIntent().getStringExtra("PROFILE_USER_NAME");
 
         if (viewerId == -1 || authToken == null || profileUserId == -1) {
-            Toast.makeText(this, "Invalid profile data", Toast.LENGTH_SHORT).show();
+            showPinkToast("Invalid profile data");
             finish();
             return;
         }
@@ -224,7 +225,7 @@ public class ProfileViewActivity extends AppCompatActivity {
                     showProgress(false);
                     swipeRefreshLayout.setRefreshing(false);
                     isLoading = false;
-                    Toast.makeText(ProfileViewActivity.this, "Network error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    showPinkToast("Network error: " + e.getMessage());
                 });
             }
 
@@ -275,11 +276,11 @@ public class ProfileViewActivity extends AppCompatActivity {
                             adapter.notifyDataSetChanged();
 
                         } else {
-                            Toast.makeText(ProfileViewActivity.this, json.optString("message", "Failed to load profile"), Toast.LENGTH_SHORT).show();
+                            showPinkToast(json.optString("message", "Failed to load profile"));
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
-                        Toast.makeText(ProfileViewActivity.this, "Error parsing data", Toast.LENGTH_SHORT).show();
+                        showPinkToast("Error parsing data");
                     }
                 });
             }
@@ -320,6 +321,23 @@ public class ProfileViewActivity extends AppCompatActivity {
         adapter.notifyDataSetChanged();
     }
 
+    private void showPinkToast(String message) {
+        try {
+            LayoutInflater inflater = getLayoutInflater();
+            View layout = inflater.inflate(R.layout.custom_toast_pink, findViewById(R.id.custom_toast_container));
+            TextView text = layout.findViewById(R.id.toast_text);
+            text.setText(message);
+
+            Toast toast = new Toast(getApplicationContext());
+            toast.setDuration(Toast.LENGTH_SHORT);
+            toast.setView(layout);
+            toast.setGravity(Gravity.BOTTOM, 0, 100);
+            toast.show();
+        } catch (Exception e) {
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void showProgress(boolean show) {
         progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
     }
@@ -331,16 +349,16 @@ public class ProfileViewActivity extends AppCompatActivity {
                 .setItems(options, (dialog, which) -> {
                     switch (which) {
                         case 0:
-                            Toast.makeText(this, "Edit Profile coming soon", Toast.LENGTH_SHORT).show();
+                            showPinkToast("Edit Profile coming soon");
                             break;
                         case 1:
-                            Toast.makeText(this, "Change Password coming soon", Toast.LENGTH_SHORT).show();
+                            showPinkToast("Change Password coming soon");
                             break;
                         case 2:
                             showDeletePostDialog();
                             break;
                         case 3:
-                            Toast.makeText(this, "Settings coming soon", Toast.LENGTH_SHORT).show();
+                            showPinkToast("Settings coming soon");
                             break;
                     }
                 })
@@ -385,7 +403,7 @@ public class ProfileViewActivity extends AppCompatActivity {
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 runOnUiThread(() -> {
                     showProgress(false);
-                    Toast.makeText(ProfileViewActivity.this, "Failed to delete post", Toast.LENGTH_SHORT).show();
+                    showPinkToast("Failed to delete post");
                 });
             }
 
@@ -394,7 +412,7 @@ public class ProfileViewActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     showProgress(false);
                     refreshProfile();
-                    Toast.makeText(ProfileViewActivity.this, "Post deleted", Toast.LENGTH_SHORT).show();
+                    showPinkToast("Post deleted");
                 });
             }
         });
@@ -434,28 +452,32 @@ public class ProfileViewActivity extends AppCompatActivity {
 
             // Parse media
             post.media = new ArrayList<>();
-            JSONArray mediaArray = json.getJSONArray("media");
-            for (int i = 0; i < mediaArray.length(); i++) {
-                JSONObject mediaJson = mediaArray.getJSONObject(i);
-                MediaItem media = new MediaItem();
-                media.id = mediaJson.getInt("id");
-                media.path = mediaJson.getString("path");
-                media.type = mediaJson.getString("type");
-                post.media.add(media);
+            JSONArray mediaArray = json.optJSONArray("media");
+            if (mediaArray != null) {
+                for (int i = 0; i < mediaArray.length(); i++) {
+                    JSONObject mediaJson = mediaArray.getJSONObject(i);
+                    MediaItem media = new MediaItem();
+                    media.id = mediaJson.getInt("id");
+                    media.path = mediaJson.getString("path");
+                    media.type = mediaJson.getString("type");
+                    post.media.add(media);
+                }
             }
 
             // Parse comments
             post.comments = new ArrayList<>();
-            JSONArray commentsArray = json.getJSONArray("comments");
-            for (int i = 0; i < commentsArray.length(); i++) {
-                JSONObject commentJson = commentsArray.getJSONObject(i);
-                Comment comment = new Comment();
-                comment.id = commentJson.getInt("id");
-                comment.text = commentJson.getString("text");
-                comment.userName = commentJson.getString("user_name");
-                comment.userId = commentJson.getInt("user_id");
-                comment.createdAt = commentJson.getString("created_at");
-                post.comments.add(comment);
+            JSONArray commentsArray = json.optJSONArray("comments");
+            if (commentsArray != null) {
+                for (int i = 0; i < commentsArray.length(); i++) {
+                    JSONObject commentJson = commentsArray.getJSONObject(i);
+                    Comment comment = new Comment();
+                    comment.id = commentJson.getInt("id");
+                    comment.text = commentJson.getString("text");
+                    comment.userName = commentJson.getString("user_name");
+                    comment.userId = commentJson.getInt("user_id");
+                    comment.createdAt = commentJson.getString("created_at");
+                    post.comments.add(comment);
+                }
             }
 
             return post;
@@ -889,7 +911,7 @@ public class ProfileViewActivity extends AppCompatActivity {
                         submitComment(post, comment);
                         commentDialog.dismiss();
                     } else {
-                        Toast.makeText(ProfileViewActivity.this, "Please enter a comment", Toast.LENGTH_SHORT).show();
+                        showPinkToast("Please enter a comment");
                     }
                 });
 

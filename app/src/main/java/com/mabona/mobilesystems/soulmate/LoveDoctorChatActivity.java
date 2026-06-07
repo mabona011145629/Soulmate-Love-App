@@ -34,6 +34,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -113,6 +115,7 @@ public class LoveDoctorChatActivity extends AppCompatActivity {
 
     private MessageAdapter messagesAdapter;
     private List<Message> messagesList = new ArrayList<>();
+    private int lastSeenMessageId = -1;
     private OkHttpClient client;
     private Handler handler = new Handler();
     private boolean isLoading = false;
@@ -128,7 +131,7 @@ public class LoveDoctorChatActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_love_doctor_chat);
-        
+
         activeSessionId = getIntent().getIntExtra("SESSION_ID", -1);
 
         client = new OkHttpClient.Builder()
@@ -147,7 +150,7 @@ public class LoveDoctorChatActivity extends AppCompatActivity {
         doctorName = getIntent().getStringExtra("DOCTOR_NAME");
 
         if (userId == -1 || authToken == null || doctorId == -1 || sessionId == -1) {
-            Toast.makeText(this, "Invalid chat session", Toast.LENGTH_SHORT).show();
+            showPinkToast("Invalid chat session");
             finish();
             return;
         }
@@ -215,7 +218,7 @@ public class LoveDoctorChatActivity extends AppCompatActivity {
         voiceButton.setOnClickListener(v -> {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, PERMISSION_REQUEST_CODE);
-                Toast.makeText(this, "Microphone permission needed", Toast.LENGTH_LONG).show();
+                showPinkToast("Microphone permission needed");
                 return;
             }
             messageInputContainer.setVisibility(View.GONE);
@@ -281,7 +284,7 @@ public class LoveDoctorChatActivity extends AppCompatActivity {
         EditText searchInput = dialog.findViewById(R.id.partnerSearchInput);
         RecyclerView resultsList = dialog.findViewById(R.id.partnerSearchResults);
         resultsList.setLayoutManager(new LinearLayoutManager(this));
-        
+
         List<SearchUser> searchResults = new ArrayList<>();
         SearchUserAdapter adapter = new SearchUserAdapter(searchResults, user -> {
             invitePartnerToTherapy(user.id);
@@ -357,7 +360,7 @@ public class LoveDoctorChatActivity extends AppCompatActivity {
         client.newCall(request).enqueue(new Callback() {
             @Override public void onFailure(Call call, IOException e) {}
             @Override public void onResponse(Call call, Response response) throws IOException {
-                runOnUiThread(() -> Toast.makeText(LoveDoctorChatActivity.this, "Invitation sent! 💕", Toast.LENGTH_SHORT).show());
+                runOnUiThread(() -> showPinkToast("Invitation sent! 💕"));
             }
         });
     }
@@ -403,6 +406,23 @@ public class LoveDoctorChatActivity extends AppCompatActivity {
         startActivityForResult(Intent.createChooser(intent, "Select Audio"), PICK_AUDIO_REQUEST);
     }
 
+    private void showPinkToast(String message) {
+        try {
+            LayoutInflater inflater = getLayoutInflater();
+            View layout = inflater.inflate(R.layout.custom_toast_pink, findViewById(R.id.custom_toast_container));
+            TextView text = layout.findViewById(R.id.toast_text);
+            text.setText(message);
+
+            Toast toast = new Toast(getApplicationContext());
+            toast.setDuration(Toast.LENGTH_SHORT);
+            toast.setView(layout);
+            toast.setGravity(Gravity.BOTTOM, 0, 100);
+            toast.show();
+        } catch (Exception e) {
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void setupVoiceRecording() {
         voiceRecordingPanel.setOnTouchListener(new View.OnTouchListener() {
             @Override public boolean onTouch(View v, MotionEvent event) {
@@ -417,7 +437,7 @@ public class LoveDoctorChatActivity extends AppCompatActivity {
 
     private void startRecording() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(this, "Microphone permission needed", Toast.LENGTH_SHORT).show();
+            showPinkToast("Microphone permission needed");
             return;
         }
         try {
@@ -434,8 +454,10 @@ public class LoveDoctorChatActivity extends AppCompatActivity {
             voiceTimerHandler.postDelayed(new Runnable() {
                 @Override public void run() { voiceDuration++; voiceRecordingTimer.setText(formatVoiceDuration(voiceDuration)); voiceTimerHandler.postDelayed(this, 1000); }
             }, 1000);
-            vibrate(50);
-        } catch (Exception e) { Toast.makeText(this, "Failed to start recording", Toast.LENGTH_SHORT).show(); }
+            
+            playSound("record_start");
+            // vibrate(50);
+        } catch (Exception e) { showPinkToast("Failed to start recording"); }
     }
 
     private void stopRecordingAndSend() {
@@ -443,7 +465,7 @@ public class LoveDoctorChatActivity extends AppCompatActivity {
             try { mediaRecorder.stop(); mediaRecorder.release(); mediaRecorder = null; } catch (Exception e) {}
             isRecording = false; voiceTimerHandler.removeCallbacksAndMessages(null);
             if (voiceDuration >= 1) sendVoiceMessage();
-            else { Toast.makeText(this, "Too short", Toast.LENGTH_SHORT).show(); new File(voiceFilePath).delete(); }
+            else { showPinkToast("Too short"); new File(voiceFilePath).delete(); }
         }
         messageInputContainer.setVisibility(View.VISIBLE);
         voiceRecordingPanel.setVisibility(View.GONE);
@@ -454,7 +476,9 @@ public class LoveDoctorChatActivity extends AppCompatActivity {
         if (voiceFilePath == null) return;
         final File voiceFile = new File(voiceFilePath);
         if (!voiceFile.exists()) return;
-        vibrate(30);
+
+        playSound("send");
+        // vibrate(30);
         MultipartBody.Builder builder = new MultipartBody.Builder().setType(MultipartBody.FORM)
                 .addFormDataPart("token", authToken).addFormDataPart("session_id", String.valueOf(sessionId))
                 .addFormDataPart("duration", String.valueOf(voiceDuration))
@@ -512,7 +536,8 @@ public class LoveDoctorChatActivity extends AppCompatActivity {
     }
 
     private void sendTextMessage(String message) {
-        messageInput.setText(""); vibrate(30);
+        messageInput.setText(""); // vibrate(30);
+        playSound("send");
         MultipartBody.Builder builder = new MultipartBody.Builder().setType(MultipartBody.FORM)
                 .addFormDataPart("action", "send_message").addFormDataPart("token", authToken)
                 .addFormDataPart("session_id", String.valueOf(sessionId))
@@ -527,7 +552,8 @@ public class LoveDoctorChatActivity extends AppCompatActivity {
     }
 
     private void sendMediaMessage(Uri uri, String type) {
-        vibrate(30);
+        // vibrate(30);
+        playSound("send");
         try {
             InputStream inputStream = getContentResolver().openInputStream(uri);
             byte[] fileBytes = getBytes(inputStream);
@@ -538,9 +564,12 @@ public class LoveDoctorChatActivity extends AppCompatActivity {
                     .addFormDataPart("action", "send_media").addFormDataPart("token", authToken)
                     .addFormDataPart("session_id", String.valueOf(sessionId))
                     .addFormDataPart("media", fileName, RequestBody.create(MediaType.parse(mimeType), fileBytes));
-            Request request = new Request.Builder().url(BASE_URL + "dr.php").post(builder.build()).build();
+            Request request = new Request.Builder().url(BASE_URL + "dr.php").post(builder.build())
+                    .build();
             client.newCall(request).enqueue(new Callback() {
-                @Override public void onFailure(@NonNull Call call, @NonNull IOException e) {}
+                @Override public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                    runOnUiThread(() -> showPinkToast("Failed to send media"));
+                }
                 @Override public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                     runOnUiThread(() -> loadMessages());
                 }
@@ -580,6 +609,14 @@ public class LoveDoctorChatActivity extends AppCompatActivity {
                                     msg.duration = m.optInt("voice_duration", 0);
                                     msg.createdAt = m.optString("created_at", "");
                                     messagesList.add(msg);
+
+                                    // Play sound for NEW incoming messages
+                                    if (msg.id > lastSeenMessageId) {
+                                        if (msg.senderId != userId && lastSeenMessageId != -1) {
+                                            playSound("receive");
+                                        }
+                                        lastSeenMessageId = msg.id;
+                                    }
                                 }
                                 messagesAdapter.notifyDataSetChanged();
                                 if (!messagesList.isEmpty()) messagesRecyclerView.scrollToPosition(messagesList.size() - 1);
@@ -605,6 +642,38 @@ public class LoveDoctorChatActivity extends AppCompatActivity {
         handler.postDelayed(new Runnable() {
             @Override public void run() { if (!isFinishing() && !isDestroyed()) { loadMessages(); handler.postDelayed(this, 3000); } }
         }, 3000);
+    }
+
+    private void playSound(String type) {
+        try {
+            int soundRes = 0;
+            switch (type) {
+                case "send":
+                    soundRes = getResources().getIdentifier("send_sound", "raw", getPackageName());
+                    break;
+                case "receive":
+                    // Use notification_request.mp3 for incoming messages while in chat
+                    soundRes = getResources().getIdentifier("notification_request", "raw", getPackageName());
+                    break;
+                case "record_start":
+                    soundRes = getResources().getIdentifier("record_start", "raw", getPackageName());
+                    break;
+            }
+            if (soundRes != 0) {
+                if (mediaPlayer != null) {
+                    mediaPlayer.release();
+                    mediaPlayer = null;
+                }
+                mediaPlayer = MediaPlayer.create(this, soundRes);
+                if (mediaPlayer != null) {
+                    mediaPlayer.start();
+                    mediaPlayer.setOnCompletionListener(mp -> {
+                        mp.release();
+                        mediaPlayer = null;
+                    });
+                }
+            }
+        } catch (Exception e) {}
     }
 
     private void vibrate(long duration) {

@@ -13,6 +13,8 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -59,7 +61,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
             String email = emailEditText.getText().toString().trim();
             if (email.isEmpty()) {
-                Toast.makeText(this, "Please enter your email", Toast.LENGTH_SHORT).show();
+                showPinkToast("Please enter your email");
                 return;
             }
 
@@ -119,7 +121,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 runOnUiThread(() -> {
                     showProgress(false);
-                    Toast.makeText(ForgotPasswordActivity.this, "Network error", Toast.LENGTH_SHORT).show();
+                    showPinkToast("Network error");
                 });
             }
 
@@ -132,16 +134,33 @@ public class ForgotPasswordActivity extends AppCompatActivity {
                         JSONObject jsonResponse = new JSONObject(responseBody);
                         boolean success = jsonResponse.getBoolean("success");
                         String message = jsonResponse.getString("message");
-                        Toast.makeText(ForgotPasswordActivity.this, message, Toast.LENGTH_LONG).show();
+                        showPinkToast(message);
                         if (success) {
                             finish(); // Go back to login
                         }
                     } catch (JSONException e) {
-                        Toast.makeText(ForgotPasswordActivity.this, "Error parsing response", Toast.LENGTH_SHORT).show();
+                        showPinkToast("Error parsing response");
                     }
                 });
             }
         });
+    }
+
+    private void showPinkToast(String message) {
+        try {
+            LayoutInflater inflater = getLayoutInflater();
+            View layout = inflater.inflate(R.layout.custom_toast_pink, findViewById(R.id.custom_toast_container));
+            TextView text = layout.findViewById(R.id.toast_text);
+            text.setText(message);
+
+            Toast toast = new Toast(getApplicationContext());
+            toast.setDuration(Toast.LENGTH_SHORT);
+            toast.setView(layout);
+            toast.setGravity(Gravity.BOTTOM, 0, 100);
+            toast.show();
+        } catch (Exception e) {
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void showProgress(boolean show) {

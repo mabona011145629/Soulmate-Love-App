@@ -16,6 +16,8 @@ import android.widget.ProgressBar;
 import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -107,7 +109,7 @@ public class DoctorProfileActivity extends AppCompatActivity {
                     try {
                         JSONObject json = new JSONObject(body);
                         if (json.getBoolean("success")) displayProfile(json.getJSONObject("doctor"));
-                    } catch (Exception e) { Toast.makeText(DoctorProfileActivity.this, "Parse Error", Toast.LENGTH_SHORT).show(); }
+                    } catch (Exception e) { showPinkToast("Parse Error"); }
                 });
             }
         });
@@ -142,7 +144,7 @@ public class DoctorProfileActivity extends AppCompatActivity {
 
     private void submitRating() {
         float rating = doctorRatingBar.getRating();
-        if (rating < 1) { Toast.makeText(this, "Please select at least 1 star", Toast.LENGTH_SHORT).show(); return; }
+        if (rating < 1) { showPinkToast("Please select at least 1 star"); return; }
 
         RequestBody body = new FormBody.Builder()
                 .add("action", "rate_doctor")
@@ -157,7 +159,7 @@ public class DoctorProfileActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call call, Response response) {
                 runOnUiThread(() -> {
-                    Toast.makeText(DoctorProfileActivity.this, "Thank you for your rating! 💖", Toast.LENGTH_SHORT).show();
+                    showPinkToast("Thank you for your rating! 💖");
                     loadDoctorProfile();
                 });
             }
@@ -178,7 +180,7 @@ public class DoctorProfileActivity extends AppCompatActivity {
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 runOnUiThread(() -> {
                     showProgress(false);
-                    Toast.makeText(DoctorProfileActivity.this, "Connection failed", Toast.LENGTH_SHORT).show();
+                    showPinkToast("Connection failed");
                 });
             }
 
@@ -200,14 +202,31 @@ public class DoctorProfileActivity extends AppCompatActivity {
                             startActivity(intent);
                             overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
                         } else {
-                            Toast.makeText(DoctorProfileActivity.this, "Could not start session", Toast.LENGTH_SHORT).show();
+                            showPinkToast("Could not start session");
                         }
                     } catch (Exception e) {
-                        Toast.makeText(DoctorProfileActivity.this, "Error starting therapy", Toast.LENGTH_SHORT).show();
+                        showPinkToast("Error starting therapy");
                     }
                 });
             }
         });
+    }
+
+    private void showPinkToast(String message) {
+        try {
+            LayoutInflater inflater = getLayoutInflater();
+            View layout = inflater.inflate(R.layout.custom_toast_pink, findViewById(R.id.custom_toast_container));
+            TextView text = layout.findViewById(R.id.toast_text);
+            text.setText(message);
+
+            Toast toast = new Toast(getApplicationContext());
+            toast.setDuration(Toast.LENGTH_SHORT);
+            toast.setView(layout);
+            toast.setGravity(Gravity.BOTTOM, 0, 100);
+            toast.show();
+        } catch (Exception e) {
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void showProgress(boolean show) { progressBar.setVisibility(show ? View.VISIBLE : View.GONE); }

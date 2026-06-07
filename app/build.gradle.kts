@@ -73,3 +73,9 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 }
+
+// Fix for "task 'unitTestClasses' not found" error when generating APK
+tasks.register("unitTestClasses") {
+    // Empty task to satisfy Android Studio build process
+}
+

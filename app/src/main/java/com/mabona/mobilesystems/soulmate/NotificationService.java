@@ -17,6 +17,8 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
 
+import android.widget.RemoteViews;
+
 import androidx.core.app.NotificationCompat;
 
 import org.json.JSONArray;
@@ -114,7 +116,7 @@ public class NotificationService extends Service {
 
         return new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("💕 Soulmate")
-                .setContentText("Love is finds a way...")
+                .setContentText("Love finds a way...")
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setColor(getColor(R.color.pink))
                 .setColorized(true)
@@ -273,18 +275,21 @@ public class NotificationService extends Service {
             PendingIntent pendingIntent = PendingIntent.getActivity(this, notificationId,
                     intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
+            // CUSTOM PINK NOTIFICATION
+            RemoteViews remoteViews = new RemoteViews(getPackageName(), R.layout.notification_pink);
+            remoteViews.setTextViewText(R.id.notif_title, title);
+            remoteViews.setTextViewText(R.id.notif_content, fromName + ": " + message);
+
             // ========== NOTIFICATION BUILDER IS RIGHT HERE ==========
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                     .setSmallIcon(R.mipmap.ic_launcher)
-                    .setContentTitle(title)
-                    .setContentText(fromName + ": " + message)
-                    .setStyle(new NotificationCompat.BigTextStyle().bigText(fromName + ": " + message))
+                    .setCustomContentView(remoteViews)
+                    .setCustomBigContentView(remoteViews)
+                    .setStyle(new NotificationCompat.DecoratedCustomViewStyle())
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .setAutoCancel(true)
                     .setContentIntent(pendingIntent)
-                    .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                    .setColor(getColor(R.color.pink))
-                    .setColorized(true);  // This makes the background pink
+                    .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
 
             NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             if (manager != null) {
@@ -302,27 +307,8 @@ public class NotificationService extends Service {
         }
 
         try {
-            int soundResId = 0;
-            if (type != null) {
-                switch (type) {
-                    case "love_request":
-                        soundResId = getResources().getIdentifier("notification_love", "raw", getPackageName());
-                        break;
-                    case "profile_request":
-                    case "request_accepted":
-                    case "request_declined":
-                        soundResId = getResources().getIdentifier("notification_request", "raw", getPackageName());
-                        break;
-                    case "new_message":
-                        soundResId = getResources().getIdentifier("notification_chat", "raw", getPackageName());
-                        break;
-                    case "therapy_invite":
-                        soundResId = getResources().getIdentifier("notification_love", "raw", getPackageName());
-                        break;
-                    default:
-                        soundResId = getResources().getIdentifier("notification_reply", "raw", getPackageName());
-                }
-            }
+            // ALL notifications now use notification_love.mp3 as requested
+            int soundResId = getResources().getIdentifier("notification_love", "raw", getPackageName());
 
             if (soundResId != 0) {
                 if (mediaPlayer != null) {

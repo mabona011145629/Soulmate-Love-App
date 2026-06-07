@@ -9,6 +9,8 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -68,7 +70,7 @@ public class RequestsActivity extends AppCompatActivity {
         userName = getIntent().getStringExtra("USER_NAME");
 
         if (userId == -1 || authToken == null || authToken.isEmpty()) {
-            Toast.makeText(this, "Session expired", Toast.LENGTH_SHORT).show();
+            showPinkToast("Session expired");
             finish();
             return;
         }
@@ -225,6 +227,23 @@ public class RequestsActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+
+    private void showPinkToast(String message) {
+        try {
+            LayoutInflater inflater = getLayoutInflater();
+            View layout = inflater.inflate(R.layout.custom_toast_pink, findViewById(R.id.custom_toast_container));
+            TextView text = layout.findViewById(R.id.toast_text);
+            text.setText(message);
+
+            Toast toast = new Toast(getApplicationContext());
+            toast.setDuration(Toast.LENGTH_SHORT);
+            toast.setView(layout);
+            toast.setGravity(Gravity.BOTTOM, 0, 100);
+            toast.show();
+        } catch (Exception e) {
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void showProgress(boolean show) {

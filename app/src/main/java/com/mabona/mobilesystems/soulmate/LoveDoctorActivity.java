@@ -19,6 +19,8 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -99,7 +101,7 @@ public class LoveDoctorActivity extends AppCompatActivity {
         sessionPin = getIntent().getStringExtra("SESSION_PIN");
 
         if (userId == -1 || authToken == null) {
-            Toast.makeText(this, "Session expired", Toast.LENGTH_SHORT).show();
+            showPinkToast("Session expired");
             finish();
             return;
         }
@@ -246,7 +248,7 @@ public class LoveDoctorActivity extends AppCompatActivity {
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 runOnUiThread(() -> {
                     showProgress(false);
-                    Toast.makeText(LoveDoctorActivity.this, "Network error", Toast.LENGTH_SHORT).show();
+                    showPinkToast("Network error");
                 });
             }
 
@@ -380,7 +382,7 @@ public class LoveDoctorActivity extends AppCompatActivity {
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 runOnUiThread(() -> {
                     showProgress(false);
-                    Toast.makeText(LoveDoctorActivity.this, "Failed to start session", Toast.LENGTH_SHORT).show();
+                    showPinkToast("Failed to start session");
                 });
             }
 
@@ -394,7 +396,7 @@ public class LoveDoctorActivity extends AppCompatActivity {
                         if (json.getBoolean("success")) {
                             openDoctorChat(doctorId, json.getInt("session_id"));
                         } else {
-                            Toast.makeText(LoveDoctorActivity.this, json.optString("message", "Error"), Toast.LENGTH_SHORT).show();
+                            showPinkToast(json.optString("message", "Error"));
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -402,6 +404,23 @@ public class LoveDoctorActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+
+    private void showPinkToast(String message) {
+        try {
+            LayoutInflater inflater = getLayoutInflater();
+            View layout = inflater.inflate(R.layout.custom_toast_pink, findViewById(R.id.custom_toast_container));
+            TextView text = layout.findViewById(R.id.toast_text);
+            text.setText(message);
+
+            Toast toast = new Toast(getApplicationContext());
+            toast.setDuration(Toast.LENGTH_SHORT);
+            toast.setView(layout);
+            toast.setGravity(Gravity.BOTTOM, 0, 100);
+            toast.show();
+        } catch (Exception e) {
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void showProgress(boolean show) {

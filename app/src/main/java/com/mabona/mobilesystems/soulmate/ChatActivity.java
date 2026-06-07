@@ -33,6 +33,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -111,6 +113,7 @@ public class ChatActivity extends AppCompatActivity {
 
     private MessageAdapter messagesAdapter;
     private List<Message> messagesList = new ArrayList<>();
+    private int lastSeenMessageId = -1;
     private OkHttpClient client;
     private Handler handler = new Handler();
     private boolean isLoading = false;
@@ -147,7 +150,7 @@ public class ChatActivity extends AppCompatActivity {
         otherUserProfileImage = getIntent().getStringExtra("OTHER_USER_PROFILE_IMAGE");
 
         if (userId == -1 || authToken == null || otherUserId == -1) {
-            Toast.makeText(this, "Invalid chat session", Toast.LENGTH_SHORT).show();
+            showPinkToast("Invalid chat session");
             finish();
             return;
         }
@@ -215,7 +218,7 @@ public class ChatActivity extends AppCompatActivity {
         voiceButton.setOnClickListener(v -> {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, PERMISSION_REQUEST_CODE);
-                Toast.makeText(this, "Microphone permission needed to record voice messages", Toast.LENGTH_LONG).show();
+                showPinkToast("Microphone permission needed to record voice messages");
                 return;
             }
             messageInputContainer.setVisibility(View.GONE);
@@ -290,7 +293,7 @@ public class ChatActivity extends AppCompatActivity {
 
     private void startRecording() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(this, "Microphone permission needed", Toast.LENGTH_SHORT).show();
+            showPinkToast("Microphone permission needed");
             return;
         }
 
@@ -318,12 +321,12 @@ public class ChatActivity extends AppCompatActivity {
                 }
             }, 1000);
 
-            vibrate(50);
+            // vibrate(50);
             playSound("record_start");
 
         } catch (Exception e) {
             e.printStackTrace();
-            Toast.makeText(this, "Failed to start recording: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            showPinkToast("Failed to start recording: " + e.getMessage());
         }
     }
 
@@ -341,7 +344,7 @@ public class ChatActivity extends AppCompatActivity {
                 // Send the voice message immediately
                 sendVoiceMessageAndWait();
             } else {
-                Toast.makeText(this, "Voice message too short", Toast.LENGTH_SHORT).show();
+                showPinkToast("Voice message too short");
                 new File(voiceFilePath).delete();
                 // Return to normal mode
                 messageInputContainer.setVisibility(View.VISIBLE);
@@ -362,7 +365,7 @@ public class ChatActivity extends AppCompatActivity {
         if (!voiceFile.exists()) return;
 
         playSound("send");
-        vibrate(30);
+        // vibrate(30);
 
         // Use voicenotes.php for voice uploads
         MultipartBody.Builder builder = new MultipartBody.Builder()
@@ -378,13 +381,13 @@ public class ChatActivity extends AppCompatActivity {
                 .post(builder.build())
                 .build();
 
-        runOnUiThread(() -> Toast.makeText(this, "Sending voice message...", Toast.LENGTH_SHORT).show());
+        runOnUiThread(() -> showPinkToast("Sending voice message..."));
 
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 runOnUiThread(() -> {
-                    Toast.makeText(ChatActivity.this, "Failed to send voice: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    showPinkToast("Failed to send voice: " + e.getMessage());
                     messageInputContainer.setVisibility(View.VISIBLE);
                     voiceRecordingPanel.setVisibility(View.GONE);
                     voiceRecordingTimer.setText("0:00");
@@ -406,16 +409,16 @@ public class ChatActivity extends AppCompatActivity {
                             voiceRecordingTimer.setText("0:00");
                             voiceDuration = 0;
                             loadMessages();
-                            Toast.makeText(ChatActivity.this, "Voice message sent!", Toast.LENGTH_SHORT).show();
+                            showPinkToast("Voice message sent!");
                         } else {
-                            Toast.makeText(ChatActivity.this, "Send failed: " + json.optString("message"), Toast.LENGTH_SHORT).show();
+                            showPinkToast("Send failed: " + json.optString("message"));
                             messageInputContainer.setVisibility(View.VISIBLE);
                             voiceRecordingPanel.setVisibility(View.GONE);
                             voiceRecordingTimer.setText("0:00");
                         }
                     } catch (Exception e) {
                         Log.e("VOICE", "Parse error: " + e.getMessage());
-                        Toast.makeText(ChatActivity.this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        showPinkToast("Error: " + e.getMessage());
                         messageInputContainer.setVisibility(View.VISIBLE);
                         voiceRecordingPanel.setVisibility(View.GONE);
                         voiceRecordingTimer.setText("0:00");
@@ -431,8 +434,8 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void setupCallButtons() {
-        voiceCallIcon.setOnClickListener(v -> Toast.makeText(ChatActivity.this, "🔜 Voice calls coming soon!", Toast.LENGTH_SHORT).show());
-        videoCallIcon.setOnClickListener(v -> Toast.makeText(ChatActivity.this, "🔜 Video calls coming soon!", Toast.LENGTH_SHORT).show());
+        voiceCallIcon.setOnClickListener(v -> showPinkToast("🔜 Voice calls coming soon!"));
+        videoCallIcon.setOnClickListener(v -> showPinkToast("🔜 Video calls coming soon!"));
     }
 
     private void animateHearts() {
@@ -488,7 +491,7 @@ public class ChatActivity extends AppCompatActivity {
     private void sendTextMessage(String message) {
         messageInput.setText("");
         playSound("send");
-        vibrate(30);
+        // vibrate(30);
 
         MultipartBody.Builder builder = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
@@ -505,7 +508,7 @@ public class ChatActivity extends AppCompatActivity {
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                runOnUiThread(() -> Toast.makeText(ChatActivity.this, "Failed to send message: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                runOnUiThread(() -> showPinkToast("Failed to send message: " + e.getMessage()));
             }
 
             @Override
@@ -517,19 +520,19 @@ public class ChatActivity extends AppCompatActivity {
 
     private void sendImageMessage(Uri uri) {
         playSound("send");
-        vibrate(30);
+        // vibrate(30);
         sendMediaFile(uri, "image/jpeg", "image_");
     }
 
     private void sendVideoMessage(Uri uri) {
         playSound("send");
-        vibrate(30);
+        // vibrate(30);
         sendMediaFile(uri, "video/mp4", "video_");
     }
 
     private void sendAudioMessage(Uri uri) {
         playSound("send");
-        vibrate(30);
+        // vibrate(30);
         String mimeType = getContentResolver().getType(uri);
         if (mimeType == null) mimeType = "audio/mpeg";
         sendMediaFile(uri, mimeType, "audio_");
@@ -541,7 +544,7 @@ public class ChatActivity extends AppCompatActivity {
             byte[] fileBytes = getBytes(inputStream);
             String fileName = prefix + System.currentTimeMillis() + getFileExtension(mimeType);
 
-            runOnUiThread(() -> Toast.makeText(this, "Sending " + prefix + "...", Toast.LENGTH_SHORT).show());
+            runOnUiThread(() -> showPinkToast("Sending " + prefix + "..."));
 
             MultipartBody.Builder builder = new MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
@@ -558,7 +561,7 @@ public class ChatActivity extends AppCompatActivity {
             client.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                    runOnUiThread(() -> Toast.makeText(ChatActivity.this, "Failed: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                    runOnUiThread(() -> showPinkToast("Failed: " + e.getMessage()));
                 }
 
                 @Override
@@ -567,7 +570,7 @@ public class ChatActivity extends AppCompatActivity {
                 }
             });
         } catch (Exception e) {
-            runOnUiThread(() -> Toast.makeText(ChatActivity.this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show());
+            runOnUiThread(() -> showPinkToast("Error: " + e.getMessage()));
         }
     }
 
@@ -635,6 +638,14 @@ public class ChatActivity extends AppCompatActivity {
                                 message.fileSize = msg.optString("file_size", "0");
                                 message.createdAt = msg.getString("created_at");
                                 messagesList.add(message);
+                                
+                                // Play sound for NEW incoming messages
+                                if (message.id > lastSeenMessageId) {
+                                    if (message.senderId != userId && lastSeenMessageId != -1) {
+                                        playSound("receive");
+                                    }
+                                    lastSeenMessageId = message.id;
+                                }
                             }
 
                             int oldSize = messagesList.size() - messagesArray.length();
@@ -708,7 +719,8 @@ public class ChatActivity extends AppCompatActivity {
                     soundRes = getResources().getIdentifier("send_sound", "raw", getPackageName());
                     break;
                 case "receive":
-                    soundRes = getResources().getIdentifier("receive_sound", "raw", getPackageName());
+                    // Use notification_request.mp3 for incoming messages while in chat
+                    soundRes = getResources().getIdentifier("notification_request", "raw", getPackageName());
                     break;
                 case "record_start":
                     soundRes = getResources().getIdentifier("record_start", "raw", getPackageName());
@@ -770,9 +782,9 @@ public class ChatActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSION_REQUEST_CODE && grantResults.length > 0) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Microphone permission granted! Press and hold to record.", Toast.LENGTH_LONG).show();
+                showPinkToast("Microphone permission granted! Press and hold to record.");
             } else {
-                Toast.makeText(this, "Microphone permission denied. Voice messages won't work.", Toast.LENGTH_LONG).show();
+                showPinkToast("Microphone permission denied. Voice messages won't work.");
             }
         }
     }
@@ -1063,11 +1075,31 @@ public class ChatActivity extends AppCompatActivity {
         }
     }
 
+    private void showPinkToast(String message) {
+        try {
+            LayoutInflater inflater = getLayoutInflater();
+            View layout = inflater.inflate(R.layout.custom_toast_pink, findViewById(R.id.custom_toast_container));
+            TextView text = layout.findViewById(R.id.toast_text);
+            text.setText(message);
+
+            Toast toast = new Toast(getApplicationContext());
+            toast.setDuration(Toast.LENGTH_SHORT);
+            toast.setView(layout);
+            toast.setGravity(Gravity.BOTTOM, 0, 100);
+            toast.show();
+        } catch (Exception e) {
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private String formatTime(String timestamp) {
         try {
             SimpleDateFormat input = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+            input.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
             Date date = input.parse(timestamp);
-            return new SimpleDateFormat("HH:mm", Locale.getDefault()).format(date);
+            SimpleDateFormat output = new SimpleDateFormat("HH:mm", Locale.getDefault());
+            output.setTimeZone(java.util.TimeZone.getDefault());
+            return output.format(date);
         } catch (Exception e) {
             return "";
         }

@@ -10,6 +10,8 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -70,7 +72,7 @@ public class RepliesActivity extends AppCompatActivity {
 
         // Validate session
         if (userId == -1 || authToken == null || authToken.isEmpty()) {
-            Toast.makeText(this, "Session expired. Please login again.", Toast.LENGTH_SHORT).show();
+            showPinkToast("Session expired. Please login again.");
             finish();
             return;
         }
@@ -165,7 +167,7 @@ public class RepliesActivity extends AppCompatActivity {
     private void viewProfile(ReplyItem reply) {
         // Check if allowed to view profile
         if (!reply.canViewProfile() && !"approved".equals(reply.getRequestStatus())) {
-            Toast.makeText(this, "You need to approve this request first to view full profile", Toast.LENGTH_SHORT).show();
+            showPinkToast("You need to approve this request first to view full profile");
             return;
         }
 
@@ -226,7 +228,7 @@ public class RepliesActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     showProgress(false);
                     showEmptyState(true, "⚠️ Network error\n\nPlease check your internet connection and try again.");
-                    Toast.makeText(RepliesActivity.this, "Network error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    showPinkToast("Network error: " + e.getMessage());
                 });
             }
 
@@ -282,11 +284,28 @@ public class RepliesActivity extends AppCompatActivity {
                     } catch (JSONException e) {
                         e.printStackTrace();
                         showEmptyState(true, "⚠️ Error loading data\n\nPlease try again later.");
-                        Toast.makeText(RepliesActivity.this, "Error parsing response", Toast.LENGTH_SHORT).show();
+                        showPinkToast("Error parsing response");
                     }
                 });
             }
         });
+    }
+
+    private void showPinkToast(String message) {
+        try {
+            LayoutInflater inflater = getLayoutInflater();
+            View layout = inflater.inflate(R.layout.custom_toast_pink, findViewById(R.id.custom_toast_container));
+            TextView text = layout.findViewById(R.id.toast_text);
+            text.setText(message);
+
+            Toast toast = new Toast(getApplicationContext());
+            toast.setDuration(Toast.LENGTH_SHORT);
+            toast.setView(layout);
+            toast.setGravity(Gravity.BOTTOM, 0, 100);
+            toast.show();
+        } catch (Exception e) {
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void showProgress(boolean show) {

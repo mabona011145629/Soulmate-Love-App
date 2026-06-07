@@ -534,6 +534,22 @@ public class PostsActivity extends AppCompatActivity {
                     profileImageView.setImageResource(R.drawable.default_profile);
                 }
 
+                // Click on profile to view user profile
+                View.OnClickListener openProfileListener = v -> {
+                    Intent intent = new Intent(PostsActivity.this, ProfileViewActivity.class);
+                    intent.putExtra("USER_ID", userId);
+                    intent.putExtra("AUTH_TOKEN", authToken);
+                    intent.putExtra("USER_EMAIL", userEmail);
+                    intent.putExtra("USER_NAME", userName);
+                    intent.putExtra("PROFILE_USER_ID", post.userId);
+                    intent.putExtra("PROFILE_USER_NAME", post.userName);
+                    startActivity(intent);
+                    overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+                };
+
+                profileImageView.setOnClickListener(openProfileListener);
+                userNameText.setOnClickListener(openProfileListener);
+
                 // Set content with read more if needed
                 if (post.content != null && !post.content.isEmpty()) {
                     if (post.content.length() > 200) {

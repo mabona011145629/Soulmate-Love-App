@@ -27,6 +27,8 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -111,7 +113,7 @@ public class RequestLoveActivity extends AppCompatActivity {
 
             // Validation
             if (myUserId == -1 || targetUserId == -1) {
-                Toast.makeText(this, "Invalid session. Please login again.", Toast.LENGTH_SHORT).show();
+                showPinkToast("Invalid session. Please login again.");
                 finish();
                 return;
             }
@@ -126,7 +128,7 @@ public class RequestLoveActivity extends AppCompatActivity {
 
         } catch (Exception e) {
             Log.e(TAG, "onCreate error: " + e.getMessage(), e);
-            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            showPinkToast("Error: " + e.getMessage());
             finish();
         }
 
@@ -201,7 +203,7 @@ public class RequestLoveActivity extends AppCompatActivity {
                 Animation bounce = AnimationUtils.loadAnimation(RequestLoveActivity.this, R.anim.bounce);
                 viewProfileTextLink.startAnimation(bounce);
                 playNotificationSound("view");
-                vibrate();
+                // vibrate();
                 overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
 
             }
@@ -259,7 +261,7 @@ public class RequestLoveActivity extends AppCompatActivity {
 
         // Show private profile indicator
         if ("private".equals(profileType)) {
-            Toast.makeText(this, "This profile is private", Toast.LENGTH_SHORT).show();
+            showPinkToast("This profile is private");
         }
 
         // Online indicator
@@ -315,7 +317,7 @@ public class RequestLoveActivity extends AppCompatActivity {
                 Animation bounce = AnimationUtils.loadAnimation(RequestLoveActivity.this, R.anim.bounce);
                 loveRequestCard.startAnimation(bounce);
                 playNotificationSound("accept");
-                vibrate();
+                // vibrate();
                 respondToRequest("accept");
             });
 
@@ -323,7 +325,7 @@ public class RequestLoveActivity extends AppCompatActivity {
                 Animation bounce = AnimationUtils.loadAnimation(RequestLoveActivity.this, R.anim.bounce);
                 profileRequestCard.startAnimation(bounce);
                 playNotificationSound("decline");
-                vibrate();
+                // vibrate();
                 respondToRequest("decline");
             });
 
@@ -335,7 +337,7 @@ public class RequestLoveActivity extends AppCompatActivity {
                 Animation bounce = AnimationUtils.loadAnimation(RequestLoveActivity.this, R.anim.bounce);
                 loveRequestCard.startAnimation(bounce);
                 playNotificationSound("love");
-                vibrate();
+                // vibrate();
                 sendRequest("love");
             });
 
@@ -346,7 +348,7 @@ public class RequestLoveActivity extends AppCompatActivity {
                     Animation bounce = AnimationUtils.loadAnimation(RequestLoveActivity.this, R.anim.bounce);
                     profileRequestCard.startAnimation(bounce);
                     playNotificationSound("request");
-                    vibrate();
+                    // vibrate();
                     sendRequest("profile_view");
                 });
             } else {
@@ -355,8 +357,8 @@ public class RequestLoveActivity extends AppCompatActivity {
                     Animation bounce = AnimationUtils.loadAnimation(RequestLoveActivity.this, R.anim.bounce);
                     profileRequestCard.startAnimation(bounce);
                     playNotificationSound("request");
-                    vibrate();
-                    Toast.makeText(RequestLoveActivity.this, "Profile is already public!", Toast.LENGTH_SHORT).show();
+                    // vibrate();
+                    showPinkToast("Profile is already public!");
                 });
             }
         }
@@ -366,7 +368,7 @@ public class RequestLoveActivity extends AppCompatActivity {
             Animation bounce = AnimationUtils.loadAnimation(RequestLoveActivity.this, R.anim.bounce);
             chatCard.startAnimation(bounce);
             playNotificationSound("chat");
-            vibrate();
+            // vibrate();
 
             Intent intent = new Intent(RequestLoveActivity.this, ChatActivity.class);
             intent.putExtra("USER_ID", myUserId);
@@ -403,7 +405,7 @@ public class RequestLoveActivity extends AppCompatActivity {
             public void onFailure(Call call, IOException e) {
                 runOnUiThread(() -> {
                     showProgress(false);
-                    Toast.makeText(RequestLoveActivity.this, "Network error. Please try again.", Toast.LENGTH_SHORT).show();
+                    showPinkToast("Network error. Please try again.");
                 });
             }
 
@@ -416,12 +418,12 @@ public class RequestLoveActivity extends AppCompatActivity {
                         JSONObject jsonResponse = new JSONObject(responseBody);
                         boolean success = jsonResponse.getBoolean("success");
                         String message = jsonResponse.getString("message");
-                        Toast.makeText(RequestLoveActivity.this, message, Toast.LENGTH_LONG).show();
+                        showPinkToast(message);
                         if (success) {
                             finish();
                         }
                     } catch (JSONException e) {
-                        Toast.makeText(RequestLoveActivity.this, "Error processing request", Toast.LENGTH_SHORT).show();
+                        showPinkToast("Error processing request");
                     }
                 });
             }
@@ -450,8 +452,7 @@ public class RequestLoveActivity extends AppCompatActivity {
             public void onFailure(Call call, IOException e) {
                 runOnUiThread(() -> {
                     showProgress(false);
-                    Toast.makeText(RequestLoveActivity.this,
-                            "Network error. Please try again.", Toast.LENGTH_SHORT).show();
+                    showPinkToast("Network error. Please try again.");
                 });
             }
 
@@ -466,7 +467,7 @@ public class RequestLoveActivity extends AppCompatActivity {
                         boolean success = jsonResponse.getBoolean("success");
                         String message = jsonResponse.getString("message");
 
-                        Toast.makeText(RequestLoveActivity.this, message, Toast.LENGTH_LONG).show();
+                        showPinkToast(message);
 
                         if (success) {
                             loveRequestCard.setEnabled(false);
@@ -482,8 +483,7 @@ public class RequestLoveActivity extends AppCompatActivity {
                             }, 5000);
                         }
                     } catch (JSONException e) {
-                        Toast.makeText(RequestLoveActivity.this,
-                                "Error sending request", Toast.LENGTH_SHORT).show();
+                        showPinkToast("Error sending request");
                     }
                 });
             }
@@ -548,7 +548,7 @@ public class RequestLoveActivity extends AppCompatActivity {
     private void setupImageZoom() {
         profileImageView.setOnClickListener(v -> {
             if (targetUserImagePath == null || targetUserImagePath.isEmpty()) {
-                Toast.makeText(this, "No image to zoom", Toast.LENGTH_SHORT).show();
+                showPinkToast("No image to zoom");
                 return;
             }
 
@@ -578,13 +578,13 @@ public class RequestLoveActivity extends AppCompatActivity {
                 zoomDialog.show();
             } catch (Exception e) {
                 Log.e(TAG, "Zoom error: " + e.getMessage());
-                Toast.makeText(this, "Cannot load image", Toast.LENGTH_SHORT).show();
+                showPinkToast("Cannot load image");
             }
         });
     }
 
     private void saveImageToGalleryFromUrl(String imageUrl) {
-        Toast.makeText(this, "Saving image...", Toast.LENGTH_SHORT).show();
+        showPinkToast("Saving image...");
 
         new Thread(() -> {
             try {
@@ -600,10 +600,10 @@ public class RequestLoveActivity extends AppCompatActivity {
                 if (bitmap != null) {
                     runOnUiThread(() -> saveBitmapToGallery(bitmap));
                 } else {
-                    runOnUiThread(() -> Toast.makeText(this, "Failed to save image", Toast.LENGTH_SHORT).show());
+                    runOnUiThread(() -> showPinkToast("Failed to save image"));
                 }
             } catch (Exception e) {
-                runOnUiThread(() -> Toast.makeText(this, "Failed to save image: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                runOnUiThread(() -> showPinkToast("Failed to save image: " + e.getMessage()));
             }
         }).start();
     }
@@ -624,7 +624,7 @@ public class RequestLoveActivity extends AppCompatActivity {
                     if (outputStream != null) {
                         outputStream.close();
                     }
-                    Toast.makeText(this, "Image saved to Gallery", Toast.LENGTH_SHORT).show();
+                    showPinkToast("Image saved to Gallery");
                 }
             } else {
                 File picturesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
@@ -638,7 +638,7 @@ public class RequestLoveActivity extends AppCompatActivity {
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
                 fos.close();
 
-                Toast.makeText(this, "Image saved to Gallery", Toast.LENGTH_SHORT).show();
+                showPinkToast("Image saved to Gallery");
 
                 Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
                 mediaScanIntent.setData(Uri.fromFile(imageFile));
@@ -646,7 +646,7 @@ public class RequestLoveActivity extends AppCompatActivity {
             }
         } catch (Exception e) {
             Log.e(TAG, "Save error: " + e.getMessage());
-            Toast.makeText(this, "Failed to save image", Toast.LENGTH_SHORT).show();
+            showPinkToast("Failed to save image");
         }
     }
 
@@ -679,13 +679,13 @@ public class RequestLoveActivity extends AppCompatActivity {
         try {
             Bitmap bitmap = ((BitmapDrawable) profileImageView.getDrawable()).getBitmap();
             if (bitmap == null) {
-                Toast.makeText(this, "No image to save", Toast.LENGTH_SHORT).show();
+                showPinkToast("No image to save");
                 return;
             }
             saveBitmapToGallery(bitmap);
         } catch (Exception e) {
             Log.e(TAG, "Save image error: " + e.getMessage());
-            Toast.makeText(this, "Failed to save image", Toast.LENGTH_SHORT).show();
+            showPinkToast("Failed to save image");
         }
     }
 
@@ -695,7 +695,24 @@ public class RequestLoveActivity extends AppCompatActivity {
         if (requestCode == REQUEST_CODE_SAVE_IMAGE && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             saveImageToGallery();
         } else {
-            Toast.makeText(this, "Permission denied to save image", Toast.LENGTH_SHORT).show();
+            showPinkToast("Permission denied to save image");
+        }
+    }
+
+    private void showPinkToast(String message) {
+        try {
+            LayoutInflater inflater = getLayoutInflater();
+            View layout = inflater.inflate(R.layout.custom_toast_pink, findViewById(R.id.custom_toast_container));
+            TextView text = layout.findViewById(R.id.toast_text);
+            text.setText(message);
+
+            Toast toast = new Toast(getApplicationContext());
+            toast.setDuration(Toast.LENGTH_SHORT);
+            toast.setView(layout);
+            toast.setGravity(Gravity.BOTTOM, 0, 100);
+            toast.show();
+        } catch (Exception e) {
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
         }
     }
 
