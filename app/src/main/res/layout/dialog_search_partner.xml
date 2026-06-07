@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:background="@drawable/dialog_background">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="💕 Invite Partner to Therapy"
+        android:textColor="@color/pink_dark"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp" />
+
+    <EditText
+        android:id="@+id/partnerSearchInput"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:hint="Search by name, email or bio..."
+        android:background="@drawable/edittext_pink_border"
+        android:padding="12dp"
+        android:textSize="14sp"
+        android:inputType="text" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/partnerSearchResults"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_marginTop="12dp" />
+
+</LinearLayout>

@@ -28,7 +28,9 @@
             android:layout_marginEnd="4dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="2dp"
-            app:cardBackgroundColor="@color/pink_light">
+            app:cardBackgroundColor="@color/pink_light"
+            android:clickable="false"
+            android:focusable="false">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -72,7 +74,9 @@
             android:layout_marginEnd="4dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="2dp"
-            app:cardBackgroundColor="@color/purple">
+            app:cardBackgroundColor="@color/purple"
+            android:clickable="true"
+            android:focusable="true">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -116,7 +120,9 @@
             android:layout_marginEnd="4dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="2dp"
-            app:cardBackgroundColor="@color/red">
+            app:cardBackgroundColor="@color/red"
+            android:clickable="true"
+            android:focusable="true">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -150,7 +156,7 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Total Posts -->
+        <!-- User's Own Posts Today (Top Card) -->
         <androidx.cardview.widget.CardView
             android:id="@+id/postsCard"
             android:layout_width="0dp"
@@ -159,7 +165,9 @@
             android:layout_marginStart="4dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="2dp"
-            app:cardBackgroundColor="@color/pink_dark">
+            app:cardBackgroundColor="@color/pink_dark"
+            android:clickable="true"
+            android:focusable="true">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -185,26 +193,33 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Posts"
+                    android:text="My Posts Today"
                     android:textColor="@color/white"
                     android:textSize="10sp" />
 
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Settings Icon -->
-        <ImageView
-            android:id="@+id/settingsIcon"
+        <!-- Profile Image Circle -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/profileImageCard"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_gravity="center_vertical"
             android:layout_marginStart="8dp"
-            android:src="@drawable/ic_settings"
-            android:padding="8dp"
-            android:background="@drawable/circle_border"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="2dp"
             android:clickable="true"
-            android:focusable="true"
-            app:tint="@color/pink_dark" />
+            android:focusable="true">
+
+            <ImageView
+                android:id="@+id/profileImageView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/default_profile"
+                android:scaleType="centerCrop" />
+
+        </androidx.cardview.widget.CardView>
 
     </LinearLayout>
 
@@ -218,15 +233,90 @@
         app:adUnitId="ca-app-pub-3940256099942544/6300978111"
         app:layout_constraintTop_toBottomOf="@+id/topBar" />
 
+    <!-- Therapy Invite Card (Hidden by default) -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/therapyInviteCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="12dp"
+        android:visibility="gone"
+        app:cardBackgroundColor="@color/white"
+        app:cardCornerRadius="15dp"
+        app:cardElevation="6dp"
+        app:layout_constraintTop_toBottomOf="@+id/bannerAdView">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/inviteText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="💕 You have a therapy invitation!"
+                android:textColor="@color/pink_dark"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal">
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/acceptInviteBtn"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    app:cardBackgroundColor="@color/pink"
+                    app:cardCornerRadius="20dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:text="Accept"
+                        android:textColor="@color/white"
+                        android:textStyle="bold" />
+
+                </androidx.cardview.widget.CardView>
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/declineInviteBtn"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    app:cardBackgroundColor="@color/light_gray"
+                    app:cardCornerRadius="20dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:text="Not Now"
+                        android:textColor="@color/dark_gray" />
+
+                </androidx.cardview.widget.CardView>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
     <!-- Swipe Refresh Layout -->
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefreshLayout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintTop_toBottomOf="@+id/bannerAdView"
-        app:layout_constraintBottom_toBottomOf="parent">
+        app:layout_constraintTop_toBottomOf="@+id/therapyInviteCard"
+        app:layout_constraintBottom_toTopOf="@+id/bottomNavigation">
 
-        <!-- Chats RecyclerView -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/chatsRecyclerView"
             android:layout_width="match_parent"
@@ -356,33 +446,76 @@
 
         </LinearLayout>
 
-        <!-- Posts -->
-        <LinearLayout
+        <!-- Posts Tab with Badge -->
+        <FrameLayout
+            android:id="@+id/postsTabContainer"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
             android:clickable="true"
             android:focusable="true">
 
-            <ImageView
-                android:id="@+id/postIcon"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@drawable/ic_post_nav"
-                app:tint="@color/purple_dark" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <ImageView
+                    android:id="@+id/postIcon"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/ic_post_nav"
+                    app:tint="@color/purple_dark" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Feed"
+                    android:textColor="@color/purple_dark"
+                    android:textSize="10sp"
+                    android:layout_marginTop="2dp" />
+
+            </LinearLayout>
 
             <TextView
+                android:id="@+id/postsBadge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Posts"
-                android:textColor="@color/purple_dark"
+                android:layout_gravity="top|end"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/badge_circle"
+                android:backgroundTint="@color/pink"
+                android:text="0"
+                android:textColor="@color/white"
                 android:textSize="10sp"
-                android:layout_marginTop="2dp" />
+                android:textStyle="bold"
+                android:gravity="center"
+                android:paddingLeft="6dp"
+                android:paddingRight="6dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
+                android:minWidth="18dp"
+                android:visibility="gone" />
 
-        </LinearLayout>
+        </FrameLayout>
 
     </LinearLayout>
+
+    <!-- Floating Action Button - Right side, centered vertically, NOT overlapping bottom nav -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabInvite"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:src="@drawable/ic_share_pink"
+        android:backgroundTint="@color/pink"
+        app:borderWidth="0dp"
+        app:elevation="6dp"
+        app:layout_constraintBottom_toTopOf="@+id/bottomNavigation"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/bannerAdView"
+        app:layout_constraintVertical_bias="0.5" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

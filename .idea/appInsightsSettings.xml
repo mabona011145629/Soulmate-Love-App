@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.mabona.mobilesystems.soulmate" />
+                  <option name="mobileSdkAppId" value="1:518758192292:android:6ee75a3efd1ea38107c231" />
+                  <option name="projectId" value="simplify-64d3e" />
+                  <option name="projectNumber" value="518758192292" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

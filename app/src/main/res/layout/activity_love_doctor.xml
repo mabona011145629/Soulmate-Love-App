@@ -130,6 +130,7 @@
 
             <!-- Search Bar -->
             <androidx.cardview.widget.CardView
+                android:id="@+id/searchCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
@@ -156,7 +157,7 @@
                         android:layout_height="50dp"
                         android:layout_weight="1"
                         android:background="@android:color/transparent"
-                        android:hint="🔍 Search by name, gender, qualification..."
+                        android:hint="🔍 Search for Love Doctors..."
                         android:imeOptions="actionSearch"
                         android:inputType="text"
                         android:padding="12dp"

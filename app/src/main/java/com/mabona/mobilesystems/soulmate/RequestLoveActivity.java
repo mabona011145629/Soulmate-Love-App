@@ -63,9 +63,8 @@ import okhttp3.Response;
 public class RequestLoveActivity extends AppCompatActivity {
 
     // UI Components
-    private ImageView backButton, profileImageView, onlineIndicator;
+    private ImageView backButton, profileImageView, onlineIndicator, viewProfileTextLink;
     private TextView nameText, ageGenderText, locationText, bioText, statusText;
-    private TextView viewProfileTextLink; // NEW: Pink text link
     private CardView loveRequestCard, profileRequestCard, chatCard;
     private TextView loveRequestText, profileRequestText, chatText;
     private ProgressBar progressBar;
@@ -130,6 +129,7 @@ public class RequestLoveActivity extends AppCompatActivity {
             Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
             finish();
         }
+
     }
 
     private void getIntentData() {
@@ -166,7 +166,6 @@ public class RequestLoveActivity extends AppCompatActivity {
         backButton = findViewById(R.id.backButton);
         profileImageView = findViewById(R.id.profileImageView);
         onlineIndicator = findViewById(R.id.onlineIndicator);
-        viewProfileTextLink = findViewById(R.id.viewProfileTextLink);
         nameText = findViewById(R.id.nameText);
         ageGenderText = findViewById(R.id.ageGenderText);
         locationText = findViewById(R.id.locationText);
@@ -178,12 +177,35 @@ public class RequestLoveActivity extends AppCompatActivity {
         heartImage2 = findViewById(R.id.heartImage2);
         heartImage3 = findViewById(R.id.heartImage3);
 
+
         loveRequestCard = findViewById(R.id.loveRequestCard);
         profileRequestCard = findViewById(R.id.profileRequestCard);
         chatCard = findViewById(R.id.chatCard);
         loveRequestText = findViewById(R.id.loveRequestText);
         profileRequestText = findViewById(R.id.profileRequestText);
         chatText = findViewById(R.id.chatText);
+        viewProfileTextLink=findViewById(R.id.viewProfileTextLink);
+        viewProfileTextLink.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+
+                Intent intent = new Intent(RequestLoveActivity.this, ProfileViewActivity.class);
+                intent.putExtra("USER_ID", myUserId);
+                intent.putExtra("AUTH_TOKEN", authToken);
+                intent.putExtra("USER_EMAIL", myUserEmail);
+                intent.putExtra("USER_NAME", myUserName);
+                intent.putExtra("PROFILE_USER_ID", targetUserId);
+                intent.putExtra("PROFILE_USER_NAME", targetUserName);
+                startActivity(intent);
+                Animation bounce = AnimationUtils.loadAnimation(RequestLoveActivity.this, R.anim.bounce);
+                viewProfileTextLink.startAnimation(bounce);
+                playNotificationSound("view");
+                vibrate();
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+
+            }
+        });
 
         // Back button
         backButton.setOnClickListener(v -> {
@@ -282,27 +304,6 @@ public class RequestLoveActivity extends AppCompatActivity {
         boolean isIncoming = "incoming".equals(mode);
         boolean isPrivate = "private".equals(profileType);
 
-        // ========== VIEW PROFILE PINK TEXT LINK - Always works ==========
-        if (viewProfileTextLink != null) {
-            viewProfileTextLink.setOnClickListener(v -> {
-                Animation bounce = AnimationUtils.loadAnimation(RequestLoveActivity.this, R.anim.bounce);
-                viewProfileTextLink.startAnimation(bounce);
-                playNotificationSound("view");
-                vibrate();
-
-                // Open ProfileViewActivity with the target user data
-                Intent intent = new Intent(RequestLoveActivity.this, ProfileViewActivity.class);
-                intent.putExtra("USER_ID", myUserId);
-                intent.putExtra("AUTH_TOKEN", authToken);
-                intent.putExtra("USER_EMAIL", myUserEmail);
-                intent.putExtra("USER_NAME", myUserName);
-                intent.putExtra("PROFILE_USER_ID", targetUserId);
-                intent.putExtra("PROFILE_USER_NAME", targetUserName);
-                startActivity(intent);
-                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
-            });
-        }
-
         if (isIncoming) {
             // ========== INCOMING REQUEST MODE - Show Accept/Decline ==========
             loveRequestText.setText("Accept");
@@ -340,10 +341,7 @@ public class RequestLoveActivity extends AppCompatActivity {
 
             // Profile View Request Button
             if (isPrivate) {
-                // Profile is private - show Request View button
                 profileRequestText.setText("Request View");
-                profileRequestCard.setEnabled(true);
-                profileRequestCard.setAlpha(1f);
                 profileRequestCard.setOnClickListener(v -> {
                     Animation bounce = AnimationUtils.loadAnimation(RequestLoveActivity.this, R.anim.bounce);
                     profileRequestCard.startAnimation(bounce);
@@ -352,11 +350,14 @@ public class RequestLoveActivity extends AppCompatActivity {
                     sendRequest("profile_view");
                 });
             } else {
-                // Profile is public - disable the button and make it look disabled
-                profileRequestText.setText("Profile Public");
-                profileRequestCard.setEnabled(false);
-                profileRequestCard.setAlpha(0.5f);
-                profileRequestCard.setOnClickListener(null);
+                profileRequestText.setText("View Profile");
+                profileRequestCard.setOnClickListener(v -> {
+                    Animation bounce = AnimationUtils.loadAnimation(RequestLoveActivity.this, R.anim.bounce);
+                    profileRequestCard.startAnimation(bounce);
+                    playNotificationSound("request");
+                    vibrate();
+                    Toast.makeText(RequestLoveActivity.this, "Profile is already public!", Toast.LENGTH_SHORT).show();
+                });
             }
         }
 
@@ -507,9 +508,6 @@ public class RequestLoveActivity extends AppCompatActivity {
                     break;
                 case "decline":
                     soundResId = getResources().getIdentifier("notification_decline", "raw", getPackageName());
-                    break;
-                case "view":
-                    soundResId = getResources().getIdentifier("notification_view", "raw", getPackageName());
                     break;
             }
 
@@ -706,9 +704,6 @@ public class RequestLoveActivity extends AppCompatActivity {
         loveRequestCard.setEnabled(!show);
         profileRequestCard.setEnabled(!show);
         chatCard.setEnabled(!show);
-        if (viewProfileTextLink != null) {
-            viewProfileTextLink.setEnabled(!show);
-        }
     }
 
     private void loadAd() {

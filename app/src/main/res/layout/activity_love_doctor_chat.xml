@@ -2,49 +2,51 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/gradient_background">
+    android:background="@drawable/gradient_background"
+    tools:context=".LoveDoctorChatActivity">
 
-    <!-- Floating Hearts Background -->
+    <!-- Floating Hearts -->
     <ImageView
         android:id="@+id/heartImage1"
         android:layout_width="45dp"
         android:layout_height="45dp"
+        android:layout_marginTop="30dp"
+        android:layout_marginStart="15dp"
         android:src="@drawable/heart_pink"
-        android:alpha="0.3"
+        android:alpha="0.4"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="60dp" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
         android:id="@+id/heartImage2"
         android:layout_width="30dp"
         android:layout_height="30dp"
+        android:layout_marginTop="70dp"
+        android:layout_marginEnd="20dp"
         android:src="@drawable/heart_red"
-        android:alpha="0.25"
+        android:alpha="0.3"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginEnd="30dp"
-        android:layout_marginTop="100dp" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
         android:id="@+id/heartImage3"
         android:layout_width="35dp"
         android:layout_height="35dp"
+        android:layout_marginTop="130dp"
         android:src="@drawable/heart_purple"
-        android:alpha="0.2"
+        android:alpha="0.3"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/messagesRecyclerView"
-        android:layout_marginStart="50dp"
-        android:layout_marginBottom="20dp" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <!-- Top Bar -->
     <androidx.cardview.widget.CardView
         android:id="@+id/topBar"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
+        android:layout_height="65dp"
         android:layout_marginTop="10dp"
         app:cardCornerRadius="0dp"
         app:cardBackgroundColor="@color/white"
@@ -59,13 +61,14 @@
                 android:id="@+id/backButton"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
+                android:layout_marginStart="12dp"
                 android:src="@drawable/ic_back"
                 android:padding="8dp"
                 android:clickable="true"
                 android:focusable="true"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
                 app:tint="@color/pink_dark" />
 
             <LinearLayout
@@ -73,9 +76,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
                 android:orientation="vertical"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/backButton"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/invitePartnerIcon">
 
                 <TextView
@@ -91,7 +94,7 @@
                     android:id="@+id/onlineStatusText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="💕 Therapy Session"
+                    android:text="Therapy Session Active 💕"
                     android:textColor="@color/green"
                     android:textSize="11sp" />
 
@@ -99,158 +102,54 @@
 
             <ImageView
                 android:id="@+id/invitePartnerIcon"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="12dp"
                 android:src="@drawable/ic_add_user"
-                android:padding="6dp"
+                android:padding="8dp"
                 android:clickable="true"
                 android:focusable="true"
-                android:layout_marginEnd="12dp"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
                 app:tint="@color/pink_dark" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
-
     </androidx.cardview.widget.CardView>
 
     <!-- Messages RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/messagesRecyclerView"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
-        android:padding="8dp"
+        android:layout_marginBottom="8dp"
         android:clipToPadding="false"
-        app:layout_constraintTop_toBottomOf="@+id/topBar"
-        app:layout_constraintBottom_toTopOf="@+id/messageInputContainer" />
-
-    <!-- Voice Recording Panel -->
-    <LinearLayout
-        android:id="@+id/voiceRecordingPanel"
-        android:layout_width="match_parent"
-        android:layout_height="80dp"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:background="@color/white"
-        android:elevation="8dp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent">
-
-        <ImageView
-            android:id="@+id/cancelVoiceBtn"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@drawable/ic_close"
-            android:padding="12dp"
-            android:tint="@color/red" />
-
-        <TextView
-            android:id="@+id/voiceRecordingTimer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="0:00"
-            android:textColor="@color/red"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:layout_marginHorizontal="20dp" />
-
-        <ImageView
-            android:id="@+id/sendVoiceBtn"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@drawable/ic_send"
-            android:padding="12dp"
-            android:tint="@color/pink" />
-
-    </LinearLayout>
+        android:padding="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/messageInputContainer"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/topBar" />
 
     <!-- Message Input Container -->
-    <LinearLayout
+    <androidx.cardview.widget.CardView
         android:id="@+id/messageInputContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="@color/white"
-        android:elevation="8dp"
-        app:layout_constraintBottom_toBottomOf="parent">
+        android:layout_marginBottom="8dp"
+        app:cardCornerRadius="25dp"
+        app:cardBackgroundColor="@color/white"
+        app:cardElevation="4dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
 
-        <!-- Attachment Panel -->
-        <LinearLayout
-            android:id="@+id/attachmentPanel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:padding="12dp"
-            android:visibility="gone">
-
-            <androidx.cardview.widget.CardView
-                android:id="@+id/attachImageBtn"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:layout_marginHorizontal="16dp"
-                app:cardCornerRadius="25dp"
-                app:cardBackgroundColor="@color/pink_light"
-                android:clickable="true"
-                android:focusable="true">
-
-                <ImageView
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_image"
-                    android:tint="@color/pink_dark" />
-
-            </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView
-                android:id="@+id/attachVideoBtn"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:layout_marginHorizontal="16dp"
-                app:cardCornerRadius="25dp"
-                app:cardBackgroundColor="@color/pink_light"
-                android:clickable="true"
-                android:focusable="true">
-
-                <ImageView
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_video"
-                    android:tint="@color/pink_dark" />
-
-            </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView                android:id="@+id/attachMusicBtn"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:layout_marginHorizontal="16dp"
-                app:cardCornerRadius="25dp"
-                app:cardBackgroundColor="@color/pink_light"
-                android:clickable="true"
-                android:focusable="true">
-
-                <ImageView
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_music"
-                    android:tint="@color/pink_dark" />
-
-            </androidx.cardview.widget.CardView>
-
-        </LinearLayout>
-
-        <!-- Input Row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:padding="8dp">
+            android:padding="8dp"
+            android:gravity="center_vertical">
 
             <ImageView
                 android:id="@+id/attachButton"
@@ -258,22 +157,23 @@
                 android:layout_height="40dp"
                 android:src="@drawable/ic_attach"
                 android:padding="8dp"
-                android:tint="@color/pink_dark"
                 android:clickable="true"
-                android:focusable="true" />
+                android:focusable="true"
+                app:tint="@color/pink" />
 
             <EditText
                 android:id="@+id/messageInput"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="Type your message..."
-                android:background="@drawable/edittext_pink_border"
-                android:padding="12dp"
-                android:textColor="@color/dark_gray"
-                android:textSize="14sp"
-                android:maxLines="5"
-                android:inputType="textMultiLine" />
+                android:background="@drawable/edittext_background"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="12dp"
+                android:hint="Type a message..."
+                android:textColor="@color/pink_dark"
+                android:textColorHint="@color/pink_light"
+                android:inputType="textMultiLine|textCapSentences"
+                android:maxLines="4" />
 
             <ImageView
                 android:id="@+id/voiceButton"
@@ -281,9 +181,9 @@
                 android:layout_height="40dp"
                 android:src="@drawable/ic_mic"
                 android:padding="8dp"
-                android:tint="@color/pink_dark"
                 android:clickable="true"
-                android:focusable="true" />
+                android:focusable="true"
+                app:tint="@color/purple" />
 
             <ImageView
                 android:id="@+id/sendButton"
@@ -291,11 +191,137 @@
                 android:layout_height="40dp"
                 android:src="@drawable/ic_send"
                 android:padding="8dp"
-                android:tint="@color/pink"
                 android:clickable="true"
-                android:focusable="true" />
+                android:focusable="true"
+                app:tint="@color/pink" />
 
         </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+    <!-- Voice Recording Panel -->
+    <LinearLayout
+        android:id="@+id/voiceRecordingPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:padding="16dp"
+        android:background="@color/white"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <ImageView
+            android:id="@+id/cancelVoiceBtn"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_close"
+            android:padding="12dp"
+            android:background="@drawable/circle_light_gray"
+            app:tint="@color/red" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/voice_recording_bg"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_mic"
+                app:tint="@color/red" />
+
+            <TextView
+                android:id="@+id/voiceRecordingTimer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0:00"
+                android:textColor="@color/red"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginStart="8dp" />
+
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/sendVoiceBtn"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_send"
+            android:padding="12dp"
+            android:background="@drawable/circle_pink"
+            app:tint="@color/white" />
+
+    </LinearLayout>
+
+    <!-- Attachment Panel -->
+    <LinearLayout
+        android:id="@+id/attachmentPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:padding="12dp"
+        android:visibility="gone"
+        android:background="@color/white"
+        app:layout_constraintBottom_toTopOf="@+id/messageInputContainer"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/attachImageBtn"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:layout_margin="4dp"
+            app:cardCornerRadius="12dp"
+            app:cardBackgroundColor="@color/pink_light"
+            android:clickable="true"
+            android:focusable="true">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:gravity="center">
+                <ImageView android:layout_width="28dp" android:layout_height="28dp" android:src="@drawable/ic_image" app:tint="@color/white" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Image" android:textColor="@color/white" android:textSize="11sp" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/attachVideoBtn"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:layout_margin="4dp"
+            app:cardCornerRadius="12dp"
+            app:cardBackgroundColor="@color/purple"
+            android:clickable="true"
+            android:focusable="true">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:gravity="center">
+                <ImageView android:layout_width="28dp" android:layout_height="28dp" android:src="@drawable/ic_video" app:tint="@color/white" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Video" android:textColor="@color/white" android:textSize="11sp" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/attachMusicBtn"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:layout_margin="4dp"
+            app:cardCornerRadius="12dp"
+            app:cardBackgroundColor="@color/red"
+            android:clickable="true"
+            android:focusable="true">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:gravity="center">
+                <ImageView android:layout_width="28dp" android:layout_height="28dp" android:src="@drawable/ic_music" app:tint="@color/white" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Music" android:textColor="@color/white" android:textSize="11sp" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
     </LinearLayout>
 

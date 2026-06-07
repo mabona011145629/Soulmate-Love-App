@@ -94,7 +94,7 @@ public class PostsActivity extends AppCompatActivity {
     private boolean isLoading = false;
     private boolean hasMore = true;
     private int currentOffset = 0;
-    private static final int PAGE_SIZE = 10;
+    private static final int PAGE_SIZE = 20;
     private static final int AD_INTERVAL = 5;
 
     private OkHttpClient client;
@@ -258,10 +258,14 @@ public class PostsActivity extends AppCompatActivity {
 
                             if (currentOffset == 0) {
                                 postsList.clear();
+                                postsList.addAll(newPosts);
+                                postsAdapter.notifyDataSetChanged();
+                            } else {
+                                int startPos = postsList.size() + (postsList.size() / AD_INTERVAL);
+                                postsList.addAll(newPosts);
+                                postsAdapter.notifyItemRangeInserted(startPos, newPosts.size() + (newPosts.size() / AD_INTERVAL));
                             }
-                            postsList.addAll(newPosts);
                             currentOffset += postsArray.length();
-                            postsAdapter.notifyDataSetChanged();
 
                             if (postsList.isEmpty()) {
                                 emptyStateLayout.setVisibility(View.VISIBLE);
@@ -393,7 +397,8 @@ public class PostsActivity extends AppCompatActivity {
 
         @Override
         public int getItemViewType(int position) {
-            if (position > 0 && position % AD_INTERVAL == 0 && position <= postsList.size()) {
+            // Ad logic: Every 5 items AND at the very bottom
+            if ((position + 1) % 6 == 0 || position == getItemCount() - 1) {
                 return TYPE_AD;
             }
             return TYPE_POST;
@@ -401,12 +406,23 @@ public class PostsActivity extends AppCompatActivity {
 
         @Override
         public int getItemCount() {
-            int adCount = postsList.size() / AD_INTERVAL;
-            return postsList.size() + adCount;
+            int postCount = postsList.size();
+            if (postCount == 0) return 0;
+
+            // Total items = posts + ads (one after every 5 + one at the end)
+            int adCount = postCount / AD_INTERVAL;
+            int total = postCount + adCount;
+            
+            // If the last item isn't already an ad from the "every 5" logic, add a bottom ad
+            if (postCount % AD_INTERVAL != 0) {
+                total++;
+            }
+            
+            return total;
         }
 
         private int getRealPostPosition(int position) {
-            int adBefore = position / AD_INTERVAL;
+            int adBefore = position / 6;
             return position - adBefore;
         }
 
@@ -954,7 +970,9 @@ public class PostsActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         if (bannerAdView != null) bannerAdView.resume();
-        refreshPosts();
+        if (postsList.isEmpty()) {
+            refreshPosts();
+        }
     }
 
     @Override

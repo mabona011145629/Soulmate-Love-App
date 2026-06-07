@@ -123,11 +123,14 @@ public class ChatActivity extends AppCompatActivity {
     private Vibrator vibrator;
 
     private static final String BASE_URL = "https://mabona.firstsuninvestment.com/soulmate/";
+    public static int activeOtherUserId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+        
+        activeOtherUserId = getIntent().getIntExtra("OTHER_USER_ID", -1);
 
         client = new OkHttpClient.Builder()
                 .connectTimeout(60, TimeUnit.SECONDS)
@@ -612,7 +615,9 @@ public class ChatActivity extends AppCompatActivity {
                             JSONArray messagesArray = json.getJSONArray("messages");
                             hasMore = json.getBoolean("has_more");
 
-                            if (currentOffset == 0) {
+                            boolean isFirstLoad = (currentOffset == 0);
+
+                            if (isFirstLoad) {
                                 messagesList.clear();
                             }
 
@@ -632,11 +637,27 @@ public class ChatActivity extends AppCompatActivity {
                                 messagesList.add(message);
                             }
 
+                            int oldSize = messagesList.size() - messagesArray.length();
                             currentOffset += messagesArray.length();
+                            
+                            LinearLayoutManager layoutManager = (LinearLayoutManager) messagesRecyclerView.getLayoutManager();
+                            boolean isAtBottom = false;
+                            if (layoutManager != null) {
+                                int lastVisibleItem = layoutManager.findLastCompletelyVisibleItemPosition();
+                                isAtBottom = lastVisibleItem >= oldSize - 1;
+                            }
+
                             messagesAdapter.notifyDataSetChanged();
 
-                            if (messagesList.size() > 0) {
+                            if (messagesList.size() > 0 && (isFirstLoad || isAtBottom)) {
                                 messagesRecyclerView.scrollToPosition(messagesList.size() - 1);
+                            }
+
+                            // Update Online Status
+                            if (json.has("is_online")) {
+                                boolean isOnline = json.getBoolean("is_online");
+                                onlineStatusText.setText(isOnline ? "Online 💕" : "Offline");
+                                onlineStatusText.setTextColor(isOnline ? Color.parseColor("#FF1493") : Color.GRAY);
                             }
                         }
                         isLoading = false;
@@ -717,8 +738,21 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        activeOtherUserId = otherUserId;
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (activeOtherUserId == otherUserId) activeOtherUserId = -1;
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (activeOtherUserId == otherUserId) activeOtherUserId = -1;
         handler.removeCallbacksAndMessages(null);
         if (mediaPlayer != null) {
             mediaPlayer.release();

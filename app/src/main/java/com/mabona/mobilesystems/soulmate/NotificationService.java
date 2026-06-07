@@ -50,7 +50,7 @@ public class NotificationService extends Service {
     private String authToken;
     private MediaPlayer mediaPlayer;
 
-    private static final long CHECK_INTERVAL = 60000; // 60 seconds
+    private static final long CHECK_INTERVAL = 10000; // 10 seconds
     private static final String TAG = "NotificationService";
 
     @Override
@@ -71,6 +71,18 @@ public class NotificationService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "onStartCommand called");
 
+        // Always call startForeground first to satisfy Android requirements for startForegroundService()
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(NOTIFICATION_ID, createForegroundNotification(),
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
+            } else {
+                startForeground(NOTIFICATION_ID, createForegroundNotification());
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error starting foreground service: " + e.getMessage());
+        }
+
         try {
             if (intent != null) {
                 userId = intent.getIntExtra("USER_ID", -1);
@@ -79,16 +91,7 @@ public class NotificationService extends Service {
                 Log.d(TAG, "Received userId: " + userId);
 
                 if (userId != -1 && authToken != null && !authToken.isEmpty()) {
-                    // IMPORTANT: Call startForeground with type for Android 14+
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        startForeground(NOTIFICATION_ID, createForegroundNotification(),
-                                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
-                    } else {
-                        startForeground(NOTIFICATION_ID, createForegroundNotification());
-                    }
-
-                    // Small delay to let app stabilize
-                    handler.postDelayed(() -> startNotificationLoop(), 5000);
+                    handler.postDelayed(() -> startNotificationLoop(), 2000);
                 } else {
                     Log.e(TAG, "Invalid userId or authToken - stopping service");
                     stopSelf();
@@ -110,9 +113,11 @@ public class NotificationService extends Service {
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         return new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("Soulmate")
-                .setContentText("Checking for love requests...")
-                .setSmallIcon(android.R.drawable.ic_dialog_info)
+                .setContentTitle("💕 Soulmate")
+                .setContentText("Love is finds a way...")
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setColor(getColor(R.color.pink))
+                .setColorized(true)
                 .setContentIntent(pendingIntent)
                 .build();
     }
@@ -135,6 +140,14 @@ public class NotificationService extends Service {
     }
 
     private void checkForNotifications() {
+        boolean isLoggedIn = sharedPreferences.getBoolean("is_logged_in", false);
+
+        if (!isLoggedIn || userId == -1) {
+            Log.d(TAG, "User not logged in, stopping notification service");
+            stopSelf();
+            return;
+        }
+
         Log.d(TAG, "Checking for notifications for user: " + userId);
 
         try {
@@ -187,7 +200,6 @@ public class NotificationService extends Service {
                                 Log.d(TAG, "No new notifications");
                             }
 
-                            // Update last check time
                             SharedPreferences.Editor editor = sharedPreferences.edit();
                             editor.putString(KEY_LAST_NOTIFICATION_CHECK,
                                     new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date()));
@@ -213,6 +225,18 @@ public class NotificationService extends Service {
             int fromUserId = notification.optInt("from_user_id", 0);
             int notificationId = notification.optInt("notification_id", (int) System.currentTimeMillis());
 
+            // SUPPRESS NOTIFICATION IF CURRENTLY IN THAT CHAT
+            if (type.equals("new_message") || type.equals("therapy_invite")) {
+                if (LoveDoctorChatActivity.activeSessionId == relatedId) {
+                    Log.d(TAG, "Suppressed notification for active therapy session: " + relatedId);
+                    return;
+                }
+                if (ChatActivity.activeOtherUserId == fromUserId) {
+                    Log.d(TAG, "Suppressed notification for active general chat with user: " + fromUserId);
+                    return;
+                }
+            }
+
             Log.d(TAG, "Building notification ID: " + notificationId + ", Type: " + type);
 
             Intent intent;
@@ -233,6 +257,9 @@ public class NotificationService extends Service {
                 case "post_comment":
                     intent = new Intent(this, PostsActivity.class);
                     break;
+                case "therapy_invite":
+                    intent = new Intent(this, DashboardActivity.class);
+                    break;
                 default:
                     intent = new Intent(this, DashboardActivity.class);
             }
@@ -246,20 +273,18 @@ public class NotificationService extends Service {
             PendingIntent pendingIntent = PendingIntent.getActivity(this, notificationId,
                     intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-            int iconId = getResources().getIdentifier("ic_heart_pink", "drawable", getPackageName());
-            if (iconId == 0) {
-                iconId = android.R.drawable.ic_dialog_info;
-            }
-
+            // ========== NOTIFICATION BUILDER IS RIGHT HERE ==========
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                    .setSmallIcon(iconId)
+                    .setSmallIcon(R.mipmap.ic_launcher)
                     .setContentTitle(title)
                     .setContentText(fromName + ": " + message)
                     .setStyle(new NotificationCompat.BigTextStyle().bigText(fromName + ": " + message))
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .setAutoCancel(true)
                     .setContentIntent(pendingIntent)
-                    .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+                    .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                    .setColor(getColor(R.color.pink))
+                    .setColorized(true);  // This makes the background pink
 
             NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             if (manager != null) {
@@ -290,6 +315,9 @@ public class NotificationService extends Service {
                         break;
                     case "new_message":
                         soundResId = getResources().getIdentifier("notification_chat", "raw", getPackageName());
+                        break;
+                    case "therapy_invite":
+                        soundResId = getResources().getIdentifier("notification_love", "raw", getPackageName());
                         break;
                     default:
                         soundResId = getResources().getIdentifier("notification_reply", "raw", getPackageName());
@@ -326,16 +354,24 @@ public class NotificationService extends Service {
                 channel.setDescription("Love requests, messages, and updates");
                 channel.enableVibration(true);
                 channel.setLockscreenVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+                
+                // IMPORTANT: Set sound to null so it ONLY plays the MediaPlayer sound
+                channel.setSound(null, null);
 
                 NotificationManager manager = getSystemService(NotificationManager.class);
                 if (manager != null) {
                     manager.createNotificationChannel(channel);
-                    Log.d(TAG, "Notification channel created");
+                    Log.d(TAG, "Notification channel created with NO default sound");
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Error creating notification channel: " + e.getMessage());
             }
         }
+    }
+
+    public static void stopNotificationService(Context context) {
+        Intent serviceIntent = new Intent(context, NotificationService.class);
+        context.stopService(serviceIntent);
     }
 
     @Override

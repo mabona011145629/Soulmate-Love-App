@@ -188,6 +188,86 @@
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/emailLabel" />
 
+                    <!-- Phone Number -->
+                    <TextView
+                        android:id="@+id/phoneLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Phone Number"
+                        android:textColor="@color/pink_dark"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="16dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/emailEditText" />
+
+                    <LinearLayout
+                        android:id="@+id/phoneLayout"
+                        android:layout_width="0dp"
+                        android:layout_height="50dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/edittext_background"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/phoneLabel">
+
+                        <com.hbb20.CountryCodePicker
+                            android:id="@+id/ccp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            app:ccp_defaultNameCode="SZ"
+                            app:ccp_showFullName="false"
+                            app:ccp_showNameCode="false"
+                            app:ccp_textSize="14sp"
+                            app:ccp_contentColor="@color/pink_dark" />
+
+                        <EditText
+                            android:id="@+id/phoneEditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@android:color/transparent"
+                            android:hint="7612 3456"
+                            android:inputType="phone"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="16dp"
+                            android:textColor="@color/pink_dark"
+                            android:textColorHint="@color/pink_light"
+                            android:textSize="14sp" />
+
+                    </LinearLayout>
+
+                    <!-- Country (Auto-filled by Phone Picker) -->
+                    <TextView
+                        android:id="@+id/countryLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Country"
+                        android:textColor="@color/pink_dark"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="16dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/phoneLayout" />
+
+                    <EditText
+                        android:id="@+id/countryEditText"
+                        android:layout_width="0dp"
+                        android:layout_height="50dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/edittext_background"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:hint="Select country above"
+                        android:textColor="@color/pink_dark"
+                        android:textColorHint="@color/pink_light"
+                        android:editable="false"
+                        android:focusable="false"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/countryLabel" />
+
                     <!-- Password -->
                     <TextView
                         android:id="@+id/passwordLabel"
@@ -199,7 +279,7 @@
                         android:textStyle="bold"
                         android:layout_marginTop="16dp"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/emailEditText" />
+                        app:layout_constraintTop_toBottomOf="@+id/countryEditText" />
 
                     <EditText
                         android:id="@+id/passwordEditText"

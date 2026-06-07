@@ -14,6 +14,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -126,6 +128,7 @@ public class ProfileViewActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         bannerAdView = findViewById(R.id.bannerAdView);
         backButton = findViewById(R.id.backButton);
+        editButton = findViewById(R.id.editButton);
 
         titleText = findViewById(R.id.titleText);
         heartImage1 = findViewById(R.id.heartImage1);
@@ -203,6 +206,9 @@ public class ProfileViewActivity extends AppCompatActivity {
     }
 
     private void loadProfile() {
+        if (isLoading) return;
+        isLoading = true;
+        
         showProgress(true);
         swipeRefreshLayout.setRefreshing(true);
 
@@ -224,11 +230,12 @@ public class ProfileViewActivity extends AppCompatActivity {
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                String responseBody = response.body().string();
+                final String responseBody = response.body().string();
                 runOnUiThread(() -> {
                     showProgress(false);
                     swipeRefreshLayout.setRefreshing(false);
                     isLoading = false;
+                    // ...
 
                     try {
                         JSONObject json = new JSONObject(responseBody);
@@ -289,14 +296,28 @@ public class ProfileViewActivity extends AppCompatActivity {
         displayItems.clear();
         // Add profile header as a special item
         displayItems.add("HEADER");
+        
+        int postCount = postsList.size();
+        if (postCount == 0) {
+            adapter.notifyDataSetChanged();
+            return;
+        }
+
         // Add posts
-        for (int i = 0; i < postsList.size(); i++) {
+        for (int i = 0; i < postCount; i++) {
             displayItems.add(postsList.get(i));
-            // Add ad after every AD_INTERVAL posts
-            if ((i + 1) % AD_INTERVAL == 0 && (i + 1) < postsList.size()) {
+            // Add ad after every 5 posts
+            if ((i + 1) % AD_INTERVAL == 0) {
                 displayItems.add("AD");
             }
         }
+        
+        // Add ad at the bottom if the last item isn't already an ad
+        if (postCount > 0 && postCount % AD_INTERVAL != 0) {
+            displayItems.add("AD");
+        }
+        
+        adapter.notifyDataSetChanged();
     }
 
     private void showProgress(boolean show) {
@@ -642,7 +663,7 @@ public class ProfileViewActivity extends AppCompatActivity {
 
             private void sendLoveRequest() {
                 // Implement love request
-                Toast.makeText(ProfileViewActivity.this, "Love request sent to " + profileFullName, Toast.LENGTH_SHORT).show();
+
             }
 
             private void zoomProfileImage(String path) {
@@ -921,13 +942,15 @@ public class ProfileViewActivity extends AppCompatActivity {
 
             AdViewHolder(View itemView) {
                 super(itemView);
-                adView = itemView.findViewById(R.id.nativeAdView);
+                adView = itemView.findViewById(R.id.adView);
                 loadAd();
             }
 
             private void loadAd() {
-                AdRequest adRequest = new AdRequest.Builder().build();
-                adView.loadAd(adRequest);
+                if (adView != null) {
+                    AdRequest adRequest = new AdRequest.Builder().build();
+                    adView.loadAd(adRequest);
+                }
             }
         }
     }

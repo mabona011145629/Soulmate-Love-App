@@ -2,21 +2,27 @@ package com.mabona.mobilesystems.soulmate;
 
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.core.app.ActivityCompat;
+import android.content.pm.PackageManager;
+import android.Manifest;
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
@@ -45,47 +51,45 @@ public class MainActivity extends AppCompatActivity {
     private TextView verifyingText;
     private ImageView heartImage1, heartImage2, heartImage3;
     private AdView adView;
-
-    /* COMMENTED OUT - SharedPreferences for saving login data
-    private SharedPreferences sharedPreferences;
-    private static final String PREF_NAME = "SoulmatePrefs";
-    private static final String KEY_EMAIL = "user_email";
-    private static final String KEY_IS_LOGGED_IN = "is_logged_in";
-    private static final String KEY_TOKEN = "auth_token";
-    */
+    private CheckBox keepLoggedInCheckbox;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        /* COMMENTED OUT - Initialize SharedPreferences and auto-login check
-        // Initialize SharedPreferences
-        sharedPreferences = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-
-        // Check if user is already logged in
-        if (isUserLoggedIn()) {
-            // Auto-login - go directly to Dashboard
-            String savedEmail = sharedPreferences.getString(KEY_EMAIL, "");
-            if (!savedEmail.isEmpty()) {
-                goToDashboard(savedEmail);
-                return; // Exit onCreate, no need to initialize login UI
+        // Request notification permissions for Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 101);
             }
         }
-        */
+
+        // Check if user is already logged in with "Keep me logged in"
+        if (LoginManager.isLoggedIn(this)) {
+            String savedEmail = LoginManager.getSavedEmail(this);
+            int savedUserId = LoginManager.getSavedUserId(this);
+            String savedUserName = LoginManager.getSavedUserName(this);
+            String savedToken = LoginManager.getSavedToken(this);
+
+            if (savedUserId != -1 && !savedToken.isEmpty()) {
+                // Start notification service for auto-login
+                startNotificationService(savedUserId, savedToken);
+
+                goToDashboard(savedEmail, savedUserId, savedUserName, savedToken);
+                return;
+            }
+        }
 
         // Initialize views
         initializeViews();
 
-        /* COMMENTED OUT - Auto-fill saved email
         // Set saved email if exists
-        String savedEmail = sharedPreferences.getString(KEY_EMAIL, "");
+        String savedEmail = LoginManager.getSavedEmail(this);
         if (!savedEmail.isEmpty()) {
             emailEditText.setText(savedEmail);
-            // Move cursor to password field for convenience
             passwordEditText.requestFocus();
         }
-        */
 
         // Initialize Admob
         MobileAds.initialize(this, new OnInitializationCompleteListener() {
@@ -102,7 +106,6 @@ public class MainActivity extends AppCompatActivity {
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Add shake animation
                 Animation shake = AnimationUtils.loadAnimation(MainActivity.this, R.anim.shake);
                 loginButton.startAnimation(shake);
 
@@ -110,14 +113,11 @@ public class MainActivity extends AppCompatActivity {
                 String password = passwordEditText.getText().toString().trim();
 
                 if (email.isEmpty() || password.isEmpty()) {
-                    Toast.makeText(MainActivity.this, "Please fill all fields", Toast.LENGTH_SHORT).show();
+                    showPinkToast("Please fill all fields");
                     return;
                 }
 
-                // Show verifying animation
                 showVerifyingAnimation();
-
-                // Send login request
                 performLogin(email, password);
             }
         });
@@ -129,12 +129,21 @@ public class MainActivity extends AppCompatActivity {
                 Animation shake = AnimationUtils.loadAnimation(MainActivity.this, R.anim.shake);
                 createAccountButton.startAnimation(shake);
 
-                //Navigate to registration activity
                 Intent intent = new Intent(MainActivity.this, RegistrationActivity.class);
                 startActivity(intent);
                 overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
             }
         });
+
+        // Forgot password click
+        TextView forgotPasswordText = findViewById(R.id.forgotPasswordText);
+        if (forgotPasswordText != null) {
+            forgotPasswordText.setOnClickListener(v -> {
+                Intent intent = new Intent(MainActivity.this, ForgotPasswordActivity.class);
+                startActivity(intent);
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+            });
+        }
     }
 
     private void initializeViews() {
@@ -148,39 +157,10 @@ public class MainActivity extends AppCompatActivity {
         heartImage2 = findViewById(R.id.heartImage2);
         heartImage3 = findViewById(R.id.heartImage3);
         adView = findViewById(R.id.adView);
+        keepLoggedInCheckbox = findViewById(R.id.keepLoggedInCheckbox);
     }
-
-    /* COMMENTED OUT - Auto-login helper methods
-    private boolean isUserLoggedIn() {
-        // Check if user is marked as logged in
-        return sharedPreferences.getBoolean(KEY_IS_LOGGED_IN, false);
-    }
-
-    private void saveLoginData(String email, String token) {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(KEY_EMAIL, email);
-        editor.putString(KEY_TOKEN, token);
-        editor.putBoolean(KEY_IS_LOGGED_IN, true);
-        editor.apply();
-    }
-
-    private void clearLoginData() {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.remove(KEY_EMAIL);
-        editor.remove(KEY_TOKEN);
-        editor.putBoolean(KEY_IS_LOGGED_IN, false);
-        editor.apply();
-    }
-
-    private void updateEmailOnly(String email) {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(KEY_EMAIL, email);
-        editor.apply();
-    }
-    */
 
     private void setupAnimations() {
-        // Floating animation for hearts
         ObjectAnimator floatAnimation1 = ObjectAnimator.ofFloat(heartImage1, "translationY", -50f, 50f);
         floatAnimation1.setDuration(2000);
         floatAnimation1.setRepeatCount(ValueAnimator.INFINITE);
@@ -205,7 +185,6 @@ public class MainActivity extends AppCompatActivity {
         verifyingText.setVisibility(View.VISIBLE);
         loginButton.setEnabled(false);
 
-        // Rotating heart animation
         ObjectAnimator rotateHeart = ObjectAnimator.ofFloat(heartImage1, "rotation", 0f, 360f);
         rotateHeart.setDuration(1000);
         rotateHeart.setRepeatCount(ValueAnimator.INFINITE);
@@ -235,12 +214,9 @@ public class MainActivity extends AppCompatActivity {
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        hideVerifyingAnimation();
-                        Toast.makeText(MainActivity.this, "Network error. Please try again.", Toast.LENGTH_SHORT).show();
-                    }
+                runOnUiThread(() -> {
+                    hideVerifyingAnimation();
+                    showPinkToast("Network error. Please try again.");
                 });
             }
 
@@ -248,47 +224,56 @@ public class MainActivity extends AppCompatActivity {
             public void onResponse(Call call, Response response) throws IOException {
                 final String responseBody = response.body().string();
 
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        hideVerifyingAnimation();
-                        try {
-                            JSONObject jsonResponse = new JSONObject(responseBody);
-                            boolean success = jsonResponse.getBoolean("success");
+                runOnUiThread(() -> {
+                    hideVerifyingAnimation();
+                    try {
+                        JSONObject jsonResponse = new JSONObject(responseBody);
+                        boolean success = jsonResponse.getBoolean("success");
 
-                            if (success) {
-                                /* COMMENTED OUT - Save login data
-                                // Save login data
-                                String token = jsonResponse.optString("token", "");
-                                saveLoginData(email, token);
-                                */
+                        if (success) {
+                            int userId = jsonResponse.optInt("dater_id", -1);
+                            String firstName = jsonResponse.optString("first_name", "");
+                            String token = jsonResponse.optString("token", "");
 
-                                Toast.makeText(MainActivity.this, "Login successful!", Toast.LENGTH_SHORT).show();
-
-                                // Parse user data from response and pass to Dashboard
-                                int userId = jsonResponse.optInt("dater_id", -1);
-                                String firstName = jsonResponse.optString("first_name", "");
-                                String token = jsonResponse.optString("token", "");
-
-                                goToDashboard(email, userId, firstName, token);
+                            // Save login data using LoginManager
+                            if (keepLoggedInCheckbox != null && keepLoggedInCheckbox.isChecked()) {
+                                LoginManager.saveLogin(MainActivity.this, email, userId, firstName, token);
                             } else {
-                                /* COMMENTED OUT - Clear login data on failure
-                                // If login fails, clear any saved data (password change scenario)
-                                clearLoginData();
-                                */
-                                String message = jsonResponse.getString("message");
-                                Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
+                                // Clear any existing saved data
+                                LoginManager.forceLogout(MainActivity.this);
                             }
-                        } catch (JSONException e) {
-                            /* COMMENTED OUT
-                            clearLoginData();
-                            */
-                            Toast.makeText(MainActivity.this, "Invalid response from server", Toast.LENGTH_SHORT).show();
+
+                            showPinkToast("Login successful!");
+
+                            // Start notification service
+                            startNotificationService(userId, token);
+
+                            goToDashboard(email, userId, firstName, token);
+                        } else {
+                            String message = jsonResponse.getString("message");
+                            showPinkToast(message);
                         }
+                    } catch (JSONException e) {
+                        showPinkToast("Invalid response from server");
                     }
                 });
             }
         });
+    }
+
+    private void startNotificationService(int userId, String token) {
+        try {
+            Intent serviceIntent = new Intent(this, NotificationService.class);
+            serviceIntent.putExtra("USER_ID", userId);
+            serviceIntent.putExtra("AUTH_TOKEN", token);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent);
+            } else {
+                startService(serviceIntent);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void goToDashboard(String email, int userId, String firstName, String token) {
@@ -298,29 +283,32 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra("USER_NAME", firstName);
         intent.putExtra("AUTH_TOKEN", token);
         startActivity(intent);
-        finish(); // Close MainActivity so user can't go back
+        finish();
         overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
     }
 
-    /* COMMENTED OUT - Force re-login method
-    // Public method to force re-login (called from other activities when password changes)
-    public static void forceReLogin(Context context, String newEmail) {
-        SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(KEY_EMAIL, newEmail);
-        editor.putBoolean(KEY_IS_LOGGED_IN, false); // Force login again
-        editor.apply();
-
-        // Start login activity
-        Intent intent = new Intent(context, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(intent);
-    }
-    */
-
     private void loadAd() {
-        AdRequest adRequest = new AdRequest.Builder().build();
-        adView.loadAd(adRequest);
+        if (adView != null) {
+            AdRequest adRequest = new AdRequest.Builder().build();
+            adView.loadAd(adRequest);
+        }
+    }
+
+    private void showPinkToast(String message) {
+        try {
+            LayoutInflater inflater = getLayoutInflater();
+            View layout = inflater.inflate(R.layout.custom_toast_pink, findViewById(R.id.custom_toast_container));
+            TextView text = layout.findViewById(R.id.toast_text);
+            text.setText(message);
+
+            Toast toast = new Toast(getApplicationContext());
+            toast.setDuration(Toast.LENGTH_SHORT);
+            toast.setView(layout);
+            toast.setGravity(Gravity.BOTTOM, 0, 100);
+            toast.show();
+        } catch (Exception e) {
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override

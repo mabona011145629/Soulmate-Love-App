@@ -19,6 +19,12 @@ import android.text.TextUtils;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.UnderlineSpan;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -32,6 +38,8 @@ import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -43,6 +51,7 @@ import androidx.exifinterface.media.ExifInterface;
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
+import com.hbb20.CountryCodePicker;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -73,6 +82,8 @@ public class RegistrationActivity extends AppCompatActivity {
 
     private EditText emailEditText, passwordEditText, confirmPasswordEditText;
     private EditText firstNameEditText, lastNameEditText, bioEditText;
+    private EditText phoneEditText, countryEditText;
+    private CountryCodePicker ccp;
     private TextView dobTextView;
     private Spinner genderSpinner;
     private RadioGroup hideProfileRadioGroup;
@@ -105,6 +116,9 @@ public class RegistrationActivity extends AppCompatActivity {
 
     private void initializeViews() {
         emailEditText = findViewById(R.id.emailEditText);
+        phoneEditText = findViewById(R.id.phoneEditText);
+        countryEditText = findViewById(R.id.countryEditText);
+        ccp = findViewById(R.id.ccp);
         passwordEditText = findViewById(R.id.passwordEditText);
         confirmPasswordEditText = findViewById(R.id.confirmPasswordEditText);
         firstNameEditText = findViewById(R.id.firstNameEditText);
@@ -131,6 +145,46 @@ public class RegistrationActivity extends AppCompatActivity {
         profileImageView.setImageResource(R.drawable.default_profile);
         dobCalendar.add(Calendar.YEAR, -18);
         updateDobTextView();
+
+        // Setup Country Picker
+        ccp.registerCarrierNumberEditText(phoneEditText);
+        countryEditText.setText(ccp.getSelectedCountryName());
+        ccp.setOnCountryChangeListener(() -> countryEditText.setText(ccp.getSelectedCountryName()));
+
+        setupTermsLink();
+    }
+
+    private void setupTermsLink() {
+        String fullText = "I accept Terms & Conditions";
+        SpannableString ss = new SpannableString(fullText);
+
+        ClickableSpan clickableSpan = new ClickableSpan() {
+            @Override
+            public void onClick(@NonNull View widget) {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://mabona.firstsuninvestment.com/soulmate/terms_of_use.html"));
+                startActivity(intent);
+            }
+
+            @Override
+            public void updateDrawState(@NonNull android.text.TextPaint ds) {
+                super.updateDrawState(ds);
+                ds.setUnderlineText(true);
+                ds.setColor(getColor(R.color.pink_dark));
+            }
+        };
+
+        // Find index of "Terms & Conditions"
+        int start = fullText.indexOf("Terms & Conditions");
+        int end = start + "Terms & Conditions".length();
+
+        if (start != -1) {
+            ss.setSpan(clickableSpan, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            ss.setSpan(new ForegroundColorSpan(getColor(R.color.pink_dark)), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            ss.setSpan(new UnderlineSpan(), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+
+        termsCheckBox.setText(ss);
+        termsCheckBox.setMovementMethod(LinkMovementMethod.getInstance());
     }
 
     private void setupAnimations() {
@@ -446,8 +500,7 @@ public class RegistrationActivity extends AppCompatActivity {
                     }
 
                     if (age < 18) {
-                        Toast.makeText(RegistrationActivity.this,
-                                "You must be at least 18 years old", Toast.LENGTH_SHORT).show();
+                        showPinkToast("You must be at least 18 years old");
                         dobCalendar.add(Calendar.YEAR, 18 - age);
                         updateDobTextView();
                     }
@@ -481,6 +534,8 @@ public class RegistrationActivity extends AppCompatActivity {
         String lastName = lastNameEditText.getText().toString().trim();
         String bio = bioEditText.getText().toString().trim();
         String dob = dobTextView.getText().toString().trim();
+        String phoneNumber = ccp.getFullNumberWithPlus();
+        String country = countryEditText.getText().toString().trim();
 
         if (TextUtils.isEmpty(email)) {
             showError(emailEditText, "Email is required");
@@ -489,6 +544,11 @@ public class RegistrationActivity extends AppCompatActivity {
 
         if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             showError(emailEditText, "Enter a valid email");
+            return;
+        }
+
+        if (phoneEditText.getText().toString().trim().isEmpty()) {
+            showError(phoneEditText, "Phone number is required");
             return;
         }
 
@@ -517,15 +577,8 @@ public class RegistrationActivity extends AppCompatActivity {
             return;
         }
 
-        if (selectedImagePath == null || !new File(selectedImagePath).exists()) {
-            Toast.makeText(this, "Profile image is required", Toast.LENGTH_SHORT).show();
-            Animation shake = AnimationUtils.loadAnimation(this, R.anim.shake);
-            profileImageView.startAnimation(shake);
-            return;
-        }
-
         if (!termsCheckBox.isChecked()) {
-            Toast.makeText(this, "You must accept terms and conditions", Toast.LENGTH_SHORT).show();
+            showPinkToast("You must accept terms and conditions");
             Animation shake = AnimationUtils.loadAnimation(this, R.anim.shake);
             termsCheckBox.startAnimation(shake);
             return;
@@ -538,6 +591,8 @@ public class RegistrationActivity extends AppCompatActivity {
         MultipartBody.Builder builder = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
                 .addFormDataPart("email", email)
+                .addFormDataPart("phone_number", phoneNumber)
+                .addFormDataPart("country", country)
                 .addFormDataPart("password", password)
                 .addFormDataPart("first_name", firstName)
                 .addFormDataPart("last_name", lastName)
@@ -549,10 +604,12 @@ public class RegistrationActivity extends AppCompatActivity {
             builder.addFormDataPart("bio", bio);
         }
 
-        File imageFile = new File(selectedImagePath);
-        if (imageFile.exists()) {
-            builder.addFormDataPart("profile_image", imageFile.getName(),
-                    RequestBody.create(MediaType.parse("image/jpeg"), imageFile));
+        if (selectedImagePath != null) {
+            File imageFile = new File(selectedImagePath);
+            if (imageFile.exists()) {
+                builder.addFormDataPart("profile_image", imageFile.getName(),
+                        RequestBody.create(MediaType.parse("image/jpeg"), imageFile));
+            }
         }
 
         RequestBody requestBody = builder.build();
@@ -567,8 +624,7 @@ public class RegistrationActivity extends AppCompatActivity {
             public void onFailure(Call call, IOException e) {
                 runOnUiThread(() -> {
                     showProgress(false);
-                    Toast.makeText(RegistrationActivity.this,
-                            "Network error. Please try again.", Toast.LENGTH_SHORT).show();
+                    showPinkToast("Network error. Please try again.");
                 });
             }
 
@@ -584,7 +640,7 @@ public class RegistrationActivity extends AppCompatActivity {
 
                         if (success) {
                             String message = jsonResponse.getString("message");
-                            Toast.makeText(RegistrationActivity.this, message, Toast.LENGTH_SHORT).show();
+                            showPinkToast(message);
 
                             Intent intent = new Intent(RegistrationActivity.this, MainActivity.class);
                             intent.putExtra("REGISTERED_EMAIL", email);
@@ -593,15 +649,31 @@ public class RegistrationActivity extends AppCompatActivity {
                             overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
                         } else {
                             String errorMsg = jsonResponse.getString("message");
-                            Toast.makeText(RegistrationActivity.this, errorMsg, Toast.LENGTH_LONG).show();
+                            showPinkToast(errorMsg);
                         }
                     } catch (JSONException e) {
-                        Toast.makeText(RegistrationActivity.this,
-                                "Registration failed. Please try again.", Toast.LENGTH_SHORT).show();
+                        showPinkToast("Registration failed. Please try again.");
                     }
                 });
             }
         });
+    }
+
+    private void showPinkToast(String message) {
+        try {
+            LayoutInflater inflater = getLayoutInflater();
+            View layout = inflater.inflate(R.layout.custom_toast_pink, findViewById(R.id.custom_toast_container));
+            TextView text = layout.findViewById(R.id.toast_text);
+            text.setText(message);
+
+            Toast toast = new Toast(getApplicationContext());
+            toast.setDuration(Toast.LENGTH_SHORT);
+            toast.setView(layout);
+            toast.setGravity(Gravity.BOTTOM, 0, 100);
+            toast.show();
+        } catch (Exception e) {
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void showError(EditText editText, String error) {
