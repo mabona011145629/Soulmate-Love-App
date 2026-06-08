@@ -268,6 +268,35 @@
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/countryLabel" />
 
+                    <!-- Town / City -->
+                    <TextView
+                        android:id="@+id/locationLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Town / City"
+                        android:textColor="@color/pink_dark"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="16dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/countryEditText" />
+
+                    <EditText
+                        android:id="@+id/locationEditText"
+                        android:layout_width="0dp"
+                        android:layout_height="50dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/edittext_background"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:inputType="textPostalAddress"
+                        android:hint="e.g. Mbabane"
+                        android:textColor="@color/pink_dark"
+                        android:textColorHint="@color/pink_light"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/locationLabel" />
+
                     <!-- Password -->
                     <TextView
                         android:id="@+id/passwordLabel"
@@ -279,7 +308,7 @@
                         android:textStyle="bold"
                         android:layout_marginTop="16dp"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/countryEditText" />
+                        app:layout_constraintTop_toBottomOf="@+id/locationEditText" />
 
                     <EditText
                         android:id="@+id/passwordEditText"

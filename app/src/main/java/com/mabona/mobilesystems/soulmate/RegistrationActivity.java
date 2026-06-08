@@ -16,6 +16,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -56,6 +57,7 @@ import com.hbb20.CountryCodePicker;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -64,6 +66,7 @@ import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -82,7 +85,7 @@ public class RegistrationActivity extends AppCompatActivity {
 
     private EditText emailEditText, passwordEditText, confirmPasswordEditText;
     private EditText firstNameEditText, lastNameEditText, bioEditText;
-    private EditText phoneEditText, countryEditText;
+    private EditText phoneEditText, countryEditText, locationEditText;
     private CountryCodePicker ccp;
     private TextView dobTextView;
     private Spinner genderSpinner;
@@ -95,12 +98,13 @@ public class RegistrationActivity extends AppCompatActivity {
     private TextView progressText;
     private AdView adView;
 
-    private String selectedImagePath = null;
-    private Bitmap selectedBitmap = null;
+    private byte[] imageBytes = null; // Store image as bytes instead of path
     private String selectedGender = "male";
     private boolean hideProfile = false;
     private Calendar dobCalendar = Calendar.getInstance();
     private Uri cameraPhotoUri = null;
+
+    private static final String TAG = "Registration";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,6 +122,7 @@ public class RegistrationActivity extends AppCompatActivity {
         emailEditText = findViewById(R.id.emailEditText);
         phoneEditText = findViewById(R.id.phoneEditText);
         countryEditText = findViewById(R.id.countryEditText);
+        locationEditText = findViewById(R.id.locationEditText);
         ccp = findViewById(R.id.ccp);
         passwordEditText = findViewById(R.id.passwordEditText);
         confirmPasswordEditText = findViewById(R.id.confirmPasswordEditText);
@@ -173,7 +178,6 @@ public class RegistrationActivity extends AppCompatActivity {
             }
         };
 
-        // Find index of "Terms & Conditions"
         int start = fullText.indexOf("Terms & Conditions");
         int end = start + "Terms & Conditions".length();
 
@@ -231,14 +235,12 @@ public class RegistrationActivity extends AppCompatActivity {
 
     private void setupClickListeners() {
         selectImageButton.setOnClickListener(v -> {
-            // Request storage permission first
             if (checkAndRequestPermissions()) {
                 openGallery();
             }
         });
 
         takePhotoButton.setOnClickListener(v -> {
-            // Request camera and storage permissions first
             if (checkAndRequestPermissions()) {
                 openCamera();
             }
@@ -269,13 +271,11 @@ public class RegistrationActivity extends AppCompatActivity {
         String[] permissions;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            // Android 13+ - different permission structure
             permissions = new String[]{
                     Manifest.permission.CAMERA,
                     Manifest.permission.READ_MEDIA_IMAGES
             };
         } else {
-            // Android 12 and below
             permissions = new String[]{
                     Manifest.permission.CAMERA,
                     Manifest.permission.READ_EXTERNAL_STORAGE
@@ -368,42 +368,21 @@ public class RegistrationActivity extends AppCompatActivity {
         }
     }
 
-    private String saveBitmapToFile(Bitmap bitmap) {
+    private Bitmap getBitmapFromUri(Uri uri) {
         try {
-            String fileName = "profile_" + System.currentTimeMillis() + ".jpg";
-            File cacheFile = new File(getCacheDir(), fileName);
-            FileOutputStream fos = new FileOutputStream(cacheFile);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
-            fos.close();
-            return cacheFile.getAbsolutePath();
+            ContentResolver resolver = getContentResolver();
+            InputStream inputStream = resolver.openInputStream(uri);
+            return BitmapFactory.decodeStream(inputStream);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
     }
 
-    private String getRealPathFromUri(Uri uri) {
-        try {
-            String fileName = "profile_" + System.currentTimeMillis() + ".jpg";
-            File cacheFile = new File(getCacheDir(), fileName);
-
-            ContentResolver resolver = getContentResolver();
-            InputStream inputStream = resolver.openInputStream(uri);
-            OutputStream outputStream = new FileOutputStream(cacheFile);
-
-            byte[] buffer = new byte[1024];
-            int length;
-            while ((length = inputStream.read(buffer)) > 0) {
-                outputStream.write(buffer, 0, length);
-            }
-            outputStream.close();
-            inputStream.close();
-
-            return cacheFile.getAbsolutePath();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+    private byte[] bitmapToBytes(Bitmap bitmap) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 85, baos);
+        return baos.toByteArray();
     }
 
     @Override
@@ -413,48 +392,37 @@ public class RegistrationActivity extends AppCompatActivity {
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == PICK_IMAGE_REQUEST && data != null && data.getData() != null) {
                 Uri selectedImageUri = data.getData();
-                selectedImagePath = getRealPathFromUri(selectedImageUri);
 
-                if (selectedImagePath != null) {
-                    // Fix rotation for gallery images too
-                    selectedBitmap = fixImageRotation(selectedImagePath);
-                    if (selectedBitmap == null) {
-                        selectedBitmap = BitmapFactory.decodeFile(selectedImagePath);
-                    }
-                    profileImageView.setImageBitmap(selectedBitmap);
+                // Get bitmap directly from URI
+                Bitmap originalBitmap = getBitmapFromUri(selectedImageUri);
 
-                    // Re-save fixed rotation image
-                    String fixedPath = saveBitmapToFile(selectedBitmap);
-                    if (fixedPath != null) {
-                        selectedImagePath = fixedPath;
-                    }
+                if (originalBitmap != null) {
+                    // Compress and store as bytes
+                    imageBytes = bitmapToBytes(originalBitmap);
+                    profileImageView.setImageBitmap(originalBitmap);
 
+                    Log.d(TAG, "Gallery image loaded, size: " + imageBytes.length + " bytes");
                     Animation bounce = AnimationUtils.loadAnimation(this, R.anim.bounce);
                     profileImageView.startAnimation(bounce);
                 } else {
-                    Toast.makeText(this, "Failed to get image path", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Failed to load image from URI");
+                    showPinkToast("Failed to load image");
                 }
             } else if (requestCode == CAMERA_REQUEST && cameraPhotoUri != null) {
-                selectedImagePath = getRealPathFromUri(cameraPhotoUri);
+                // Get bitmap from camera URI
+                Bitmap cameraBitmap = getBitmapFromUri(cameraPhotoUri);
 
-                if (selectedImagePath != null) {
-                    // Fix rotation for camera images (important for vertical orientation)
-                    selectedBitmap = fixImageRotation(selectedImagePath);
-                    if (selectedBitmap == null) {
-                        selectedBitmap = BitmapFactory.decodeFile(selectedImagePath);
-                    }
-                    profileImageView.setImageBitmap(selectedBitmap);
+                if (cameraBitmap != null) {
+                    // Compress and store as bytes
+                    imageBytes = bitmapToBytes(cameraBitmap);
+                    profileImageView.setImageBitmap(cameraBitmap);
 
-                    // Re-save fixed rotation image
-                    String fixedPath = saveBitmapToFile(selectedBitmap);
-                    if (fixedPath != null) {
-                        selectedImagePath = fixedPath;
-                    }
-
+                    Log.d(TAG, "Camera image loaded, size: " + imageBytes.length + " bytes");
                     Animation bounce = AnimationUtils.loadAnimation(this, R.anim.bounce);
                     profileImageView.startAnimation(bounce);
                 } else {
-                    Toast.makeText(this, "Failed to get photo", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Failed to load camera image");
+                    showPinkToast("Failed to load photo");
                 }
             }
         }
@@ -475,11 +443,9 @@ public class RegistrationActivity extends AppCompatActivity {
             }
 
             if (allGranted) {
-                // Permissions granted, now we need to know which button was clicked
-                // For simplicity, we'll let the button click handler open the picker again
                 Toast.makeText(this, "Permissions granted. Click button again.", Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(this, "Permissions required to select images", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Permissions required", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -536,7 +502,9 @@ public class RegistrationActivity extends AppCompatActivity {
         String dob = dobTextView.getText().toString().trim();
         String phoneNumber = ccp.getFullNumberWithPlus();
         String country = countryEditText.getText().toString().trim();
+        String location = locationEditText.getText().toString().trim();
 
+        // Validation checks
         if (TextUtils.isEmpty(email)) {
             showError(emailEditText, "Email is required");
             return;
@@ -586,13 +554,18 @@ public class RegistrationActivity extends AppCompatActivity {
 
         showProgress(true);
 
-        OkHttpClient client = new OkHttpClient();
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(60, TimeUnit.SECONDS)
+                .writeTimeout(60, TimeUnit.SECONDS)
+                .readTimeout(60, TimeUnit.SECONDS)
+                .build();
 
         MultipartBody.Builder builder = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
                 .addFormDataPart("email", email)
                 .addFormDataPart("phone_number", phoneNumber)
                 .addFormDataPart("country", country)
+                .addFormDataPart("location_name", location)
                 .addFormDataPart("password", password)
                 .addFormDataPart("first_name", firstName)
                 .addFormDataPart("last_name", lastName)
@@ -604,12 +577,13 @@ public class RegistrationActivity extends AppCompatActivity {
             builder.addFormDataPart("bio", bio);
         }
 
-        if (selectedImagePath != null) {
-            File imageFile = new File(selectedImagePath);
-            if (imageFile.exists()) {
-                builder.addFormDataPart("profile_image", imageFile.getName(),
-                        RequestBody.create(MediaType.parse("image/jpeg"), imageFile));
-            }
+        // FIXED: Send image as bytes
+        if (imageBytes != null && imageBytes.length > 0) {
+            Log.d(TAG, "Sending image, size: " + imageBytes.length + " bytes");
+            builder.addFormDataPart("profile_image", "profile.jpg",
+                    RequestBody.create(MediaType.parse("image/jpeg"), imageBytes));
+        } else {
+            Log.d(TAG, "No image selected");
         }
 
         RequestBody requestBody = builder.build();
@@ -624,6 +598,7 @@ public class RegistrationActivity extends AppCompatActivity {
             public void onFailure(Call call, IOException e) {
                 runOnUiThread(() -> {
                     showProgress(false);
+                    Log.e(TAG, "Network error: " + e.getMessage());
                     showPinkToast("Network error. Please try again.");
                 });
             }
@@ -631,6 +606,7 @@ public class RegistrationActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 final String responseBody = response.body().string();
+                Log.d(TAG, "Server response: " + responseBody);
 
                 runOnUiThread(() -> {
                     showProgress(false);
@@ -649,9 +625,11 @@ public class RegistrationActivity extends AppCompatActivity {
                             overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
                         } else {
                             String errorMsg = jsonResponse.getString("message");
+                            Log.e(TAG, "Server error: " + errorMsg);
                             showPinkToast(errorMsg);
                         }
                     } catch (JSONException e) {
+                        Log.e(TAG, "JSON error: " + e.getMessage());
                         showPinkToast("Registration failed. Please try again.");
                     }
                 });
@@ -730,4 +708,3 @@ public class RegistrationActivity extends AppCompatActivity {
         }
     }
 }
-
